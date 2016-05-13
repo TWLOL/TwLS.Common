@@ -1,4 +1,5 @@
-﻿#region LICENSE
+
+#region LICENSE
 
 /*
  Copyright 2014 - 2014 LeagueSharp
@@ -197,6 +198,7 @@ namespace LeagueSharp.Common
         {
             lock (RenderObjectsLock)
             {
+                renderObject.OnPreReset();
                 RenderObjects.Remove(renderObject);
             }
         }
@@ -453,7 +455,6 @@ namespace LeagueSharp.Common
                          float4 Color : COLOR0;
                          float4 Position3D : TEXCOORD0;
                      };
-
                      float4x4 ProjectionMatrix;
                      float4 CircleColor;
                      float Radius;
@@ -468,12 +469,10 @@ namespace LeagueSharp.Common
                          output.Position3D = input.Position;
                          return output;
                      }
-
                      float4 PS( VS_S input ) : COLOR
                      {
                          VS_S output = (VS_S)0;
                          output = input;
-
                          float4 v = output.Position3D; 
                          float distance = Radius - sqrt(v.x * v.x + v.z*v.z); // Distance to the circle arc.
     
@@ -494,10 +493,8 @@ namespace LeagueSharp.Common
                          {
                              output.Color.w = CircleColor.w;
                          }
-
                          return output.Color;
                      }
-
                      technique Main {
                          pass P0 {
                              ZEnable = zEnabled;
