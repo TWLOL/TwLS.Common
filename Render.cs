@@ -1,4 +1,3 @@
-
 #region LICENSE
 
 /*
@@ -71,11 +70,7 @@ namespace LeagueSharp.Common
         static Render()
         {
             Drawing.OnEndScene += Drawing_OnEndScene;
-            Drawing.OnPreReset += DrawingOnOnPreReset;
-            Drawing.OnPostReset += DrawingOnOnPostReset;
             Drawing.OnDraw += Drawing_OnDraw;
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomainOnDomainUnload;
-            AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnDomainUnload;
             var thread = new Thread(PrepareObjects);
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
@@ -98,44 +93,6 @@ namespace LeagueSharp.Common
         public static bool OnScreen(Vector2 point)
         {
             return point.X > 0 && point.Y > 0 && point.X < Drawing.Width && point.Y < Drawing.Height;
-        }
-
-        /// <summary>
-        /// Fired when the current domain is unloaded.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="eventArgs">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private static void CurrentDomainOnDomainUnload(object sender, EventArgs eventArgs)
-        {
-            _cancelThread = true;
-            foreach (var renderObject in RenderObjects)
-            {
-                renderObject.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// Fired after the DirectX device is reset.
-        /// </summary>
-        /// <param name="args">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private static void DrawingOnOnPostReset(EventArgs args)
-        {
-            foreach (var renderObject in RenderObjects)
-            {
-                renderObject.OnPostReset();
-            }
-        }
-
-        /// <summary>
-        /// Fired before the DirectX device is reset.
-        /// </summary>
-        /// <param name="args">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private static void DrawingOnOnPreReset(EventArgs args)
-        {
-            foreach (var renderObject in RenderObjects)
-            {
-                renderObject.OnPreReset();
-            }
         }
 
         /// <summary>
@@ -198,7 +155,6 @@ namespace LeagueSharp.Common
         {
             lock (RenderObjectsLock)
             {
-                renderObject.OnPreReset();
                 RenderObjects.Remove(renderObject);
             }
         }
@@ -283,6 +239,7 @@ namespace LeagueSharp.Common
                 Radius = radius;
                 Width = width;
                 ZDeep = zDeep;
+                SubscribeToResetEvents();
             }
 
             /// <summary>
@@ -302,6 +259,7 @@ namespace LeagueSharp.Common
                 Width = width;
                 ZDeep = zDeep;
                 Offset = offset;
+                SubscribeToResetEvents();
             }
 
             /// <summary>
@@ -321,6 +279,7 @@ namespace LeagueSharp.Common
                 Width = width;
                 ZDeep = zDeep;
                 Offset = offset;
+                SubscribeToResetEvents();
             }
 
             /// <summary>
@@ -338,6 +297,7 @@ namespace LeagueSharp.Common
                 Radius = radius;
                 Width = width;
                 ZDeep = zDeep;
+                SubscribeToResetEvents();
             }
 
             /// <summary>
@@ -835,6 +795,7 @@ namespace LeagueSharp.Common
                 Start = start;
                 End = end;
                 Game.OnUpdate += GameOnOnUpdate;
+                SubscribeToResetEvents();
             }
 
             /// <summary>
@@ -982,6 +943,7 @@ namespace LeagueSharp.Common
                 Color = color;
                 _line = new SharpDX.Direct3D9.Line(Device) { Width = height };
                 Game.OnUpdate += Game_OnUpdate;
+                SubscribeToResetEvents();
             }
 
             /// <summary>
@@ -1150,6 +1112,19 @@ namespace LeagueSharp.Common
             {
                 return Layer >= -5 && Layer <= 5;
             }
+
+            internal void SubscribeToResetEvents()
+            {
+                Drawing.OnPreReset += delegate { this.OnPreReset(); };
+                Drawing.OnPostReset += delegate { this.OnPostReset(); };
+                AppDomain.CurrentDomain.DomainUnload += delegate { this.OnPreReset(); };
+            }
+
+            ~RenderObject()
+            {
+                this.OnPreReset();
+            }
+
         }
 
         /// <summary>
@@ -1210,6 +1185,7 @@ namespace LeagueSharp.Common
             private Sprite()
             {
                 Game.OnUpdate += Game_OnUpdate;
+                SubscribeToResetEvents();
             }
 
             /// <summary>
@@ -1717,6 +1693,7 @@ namespace LeagueSharp.Common
                 Color = color;
                 this.text = text;
                 Game.OnUpdate += Game_OnUpdate;
+                SubscribeToResetEvents();
             }
 
             /// <summary>
