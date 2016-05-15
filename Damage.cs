@@ -1,4 +1,4 @@
-﻿#region LICENSE
+#region LICENSE
 
 /*
  Copyright 2014 - 2014 LeagueSharp
@@ -504,7 +504,6 @@ namespace LeagueSharp.Common
             #endregion
 /*
             #region Gangplank
-
             p = new PassiveDamage
             {
                 ChampionName = "Gangplank",
@@ -516,9 +515,7 @@ namespace LeagueSharp.Common
                         DamageType.True,
                         20 + (10 * source.Level) + source.FlatPhysicalDamageMod)
             };
-
             AttackPassives.Add(p);
-
             #endregion
 */
             #region Garen
@@ -1639,7 +1636,6 @@ namespace LeagueSharp.Common
                         * Math.Min(target.GetBuffCount("twitchdeadlyvenom") + 1, 6)
                         / (target.Type == GameObjectType.obj_AI_Minion ? 1 : 6d))
             };
-
             AttackPassives.Add(p);
 	    */
             #endregion
@@ -7586,7 +7582,6 @@ namespace LeagueSharp.Common
                 {
                     amount *= 1 + ((new double[] { 0.4, 0.8, 1.2, 1.6, 2.0 }[sorcery.Points]) / 100);
                 } /*
-
                 //MELEE Deal an additional 3 % damage, but receive an additional 1.5 % damage
                 //RANGED Deal an additional 2 % damage, but receive an additional 2 % damage
                 Mastery DoubleEdgedSword = hero.GetMastery(Ferocity.DoubleEdgedSword);
@@ -7594,7 +7589,6 @@ namespace LeagueSharp.Common
                 {
                     amount *= hero.IsMelee() ? 1.03 : 1.02;
                 }
-
                 /* Bounty Hunter: TAKING NAMES You gain a permanent 1 % damage increase for each unique enemy champion you kill
                 Mastery BountyHunter = hero.GetMastery(Ferocity.BountyHunter);
                 if (BountyHunter != null && BountyHunter.IsActive())
@@ -7730,6 +7724,5 @@ namespace LeagueSharp.Common
         }
     }
 }
-
 
 
