@@ -1,4 +1,4 @@
-﻿namespace LeagueSharp.Common
+namespace LeagueSharp.Common
 {
     using System;
     using System.Collections.Generic;
@@ -203,7 +203,7 @@
         {
             get
             {
-                if (Menu.IsCompact || this.Parent == null)
+                if (this.Parent == null)
                 {
                     return MenuSettings.BasePosition;
                 }
@@ -320,7 +320,7 @@
                     return 0;
                 }
 
-                return (Menu.IsCompact ? 0 : this.Parent.YLevel) + this.Parent.Children.Count
+                return this.Parent.YLevel + this.Parent.Children.Count
                        + this.Parent.Items.TakeWhile(test => test.Name != this.Name).Count(c => c.ShowItem);
             }
         }
