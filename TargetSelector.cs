@@ -263,22 +263,10 @@ namespace LeagueSharp.Common
         {
             var targetBuffs = new HashSet<string>(target.Buffs.Select(buff => buff.Name), StringComparer.OrdinalIgnoreCase);
 
-            // Kindred's Lamb's Respite(R)
+            //Kindred's Lamb's Respite(R)
             if (targetBuffs.Contains("KindredRNoDeathBuff") && target.HealthPercent <= 10)
             {
                 return true;
-            }
-            
-            // Fizz E
-            if (targetBuffs.Contains("fizztrickslamsounddummy"))
-            {
-            	return true;
-            }
-            
-            // Vladimir W
-            if (targetBuffs.Contains("VladimirSanguinePool"))
-            {
-            	return true;
             }
 
             // Tryndamere's Undying Rage (R)
@@ -343,9 +331,9 @@ namespace LeagueSharp.Common
             DamageType damageType,
             bool ignoreShield = true,
             IEnumerable<Obj_AI_Hero> ignoredChamps = null,
-            Vector3? rangeCheckFrom = null)
+            Vector3? rangeCheckFrom = null, TargetSelectionConditionDelegate conditions = null)
         {
-            return GetTarget(ObjectManager.Player, range, damageType, ignoreShield, ignoredChamps, rangeCheckFrom);
+            return GetTarget(ObjectManager.Player, range, damageType, ignoreShield, ignoredChamps, rangeCheckFrom, conditions);
         }
 
         public static Obj_AI_Hero GetTargetNoCollision(Spell spell,
@@ -388,13 +376,17 @@ namespace LeagueSharp.Common
                 "varuswdebuff",
             };
 
+
+        public delegate bool TargetSelectionConditionDelegate(Obj_AI_Hero target);
+
         public static Obj_AI_Hero GetTarget(Obj_AI_Base champion,
             float range,
             DamageType type,
             bool ignoreShieldSpells = true,
             IEnumerable<Obj_AI_Hero> ignoredChamps = null,
-            Vector3? rangeCheckFrom = null)
+            Vector3? rangeCheckFrom = null, TargetSelectionConditionDelegate conditions = null)
         {
+          
             try
             {
                 if (ignoredChamps == null)
@@ -434,7 +426,7 @@ namespace LeagueSharp.Common
                         .FindAll(
                             hero =>
                                 ignoredChamps.All(ignored => ignored.NetworkId != hero.NetworkId) &&
-                                IsValidTarget(hero, range, type, ignoreShieldSpells, rangeCheckFrom));
+                                IsValidTarget(hero, range, type, ignoreShieldSpells, rangeCheckFrom) && (conditions == null || conditions(hero)));
 
                 switch (Mode)
                 {
