@@ -1,4 +1,4 @@
-﻿#region LICENSE
+#region LICENSE
 
 /*
  Copyright 2014 - 2014 LeagueSharp
@@ -58,6 +58,11 @@ namespace LeagueSharp.Common
         public string Location
         {
             get { return GetHeaderValue("Location"); }
+        }
+        
+        public string Kappa
+        {
+            get { return "kappa"; }
         }
 
         //Get last status code
