@@ -1,4 +1,4 @@
-﻿namespace LeagueSharp.Common
+namespace LeagueSharp.Common
 {
     using System;
     using System.Collections.Generic;
