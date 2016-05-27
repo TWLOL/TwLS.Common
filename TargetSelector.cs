@@ -1,3 +1,4 @@
+
 #region LICENSE
 
 /*
@@ -292,12 +293,6 @@ namespace LeagueSharp.Common
             if (targetBuffs.Contains("KindredRNoDeathBuff") && target.HealthPercent <= 10)
             {
                 return true;
-            }
-            
-            // Fizz E
-            if (targetBuffs.Contains("fizztrickslamsounddummy"))
-            {
-            	return true;
             }
             
             // Vladimir W
