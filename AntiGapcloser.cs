@@ -1,4 +1,3 @@
-
 #region LICENSE
 /*
  Copyright 2014 - 2014 LeagueSharp
@@ -156,19 +155,8 @@ namespace LeagueSharp.Common
                             })
                     .ToList();
 
-            Initialize();
-        }
-
-        public static void Initialize()
-        {
             Game.OnUpdate += Game_OnGameUpdate;
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
-        }
-
-        public static void Shutdown()
-        {
-            Game.OnUpdate -= Game_OnGameUpdate;
-            Obj_AI_Base.OnProcessSpellCast -= Obj_AI_Base_OnProcessSpellCast;
         }
 
         /// <summary>
