@@ -1,4 +1,4 @@
-﻿#region LICENSE
+#region LICENSE
 /*
  Copyright 2014 - 2014 LeagueSharp
  Dash.cs is part of LeagueSharp.Common.
@@ -44,7 +44,17 @@ namespace LeagueSharp.Common
         /// </summary>
         static Dash()
         {
+            Initialize();
+        }
+
+        public static void Initialize()
+        {
             Obj_AI_Hero.OnNewPath += ObjAiHeroOnOnNewPath;
+        }
+
+        public static void Shutdown()
+        {
+            Obj_AI_Hero.OnNewPath -= ObjAiHeroOnOnNewPath;
         }
 
         /// <summary>
