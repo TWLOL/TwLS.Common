@@ -292,7 +292,7 @@ namespace LeagueSharp.Common
                     Slot = SpellSlot.W,
                     BuffName = "Drain",
                 });
-                //Max rank Drain had different buff name
+            //Max rank Drain had different buff name
             Spells.Add(
                 new InterruptableSpell
                 {
@@ -302,16 +302,16 @@ namespace LeagueSharp.Common
                     Slot = SpellSlot.W,
                     BuffName = "fearmonger_marker",
                 });
-                /*  Crowstorm buffname only appears after finish casting.
-            Spells.Add(
-                new InterruptableSpell
-                {
-                    ChampionName = "FiddleSticks",
-                    SpellName = "Crowstorm",
-                    DangerLevel = InterruptableDangerLevel.High,
-                    Slot = SpellSlot.R,
-                    BuffName = "Crowstorm",
-                });*/
+            /*  Crowstorm buffname only appears after finish casting.
+        Spells.Add(
+            new InterruptableSpell
+            {
+                ChampionName = "FiddleSticks",
+                SpellName = "Crowstorm",
+                DangerLevel = InterruptableDangerLevel.High,
+                Slot = SpellSlot.R,
+                BuffName = "Crowstorm",
+            });*/
 
             #endregion
 
@@ -399,7 +399,17 @@ namespace LeagueSharp.Common
 
             #endregion
 
+            Initialize();
+        }
+
+        public static void Initialize()
+        {
             Game.OnUpdate += Game_OnGameUpdate;
+        }
+
+        public static void Shutdown()
+        {
+            Game.OnUpdate -= Game_OnGameUpdate;
         }
 
         [Obsolete("Use Interrupter2.OnInterruptableTarget", false)]

@@ -319,18 +319,25 @@ namespace LeagueSharp.Common
     /// </summary>
     public static class Prediction
     {
+        private static Menu _menu;
+
         /// <summary>
         /// Initializes this instance.
         /// </summary>
-        internal static void Initialize()
+        public static void Initialize()
         {
             CustomEvents.Game.OnGameLoad += eventArgs =>
             {
-                var menu = new Menu("Prediction", "Prediction");
+                _menu = new Menu("Prediction", "Prediction");
                 var slider = new MenuItem("PredMaxRange", "Max Range %").SetValue(new Slider(100, 70, 100));
-                menu.AddItem(slider);
-                CommonMenu.Instance.AddSubMenu(menu);
+                _menu.AddItem(slider);
+                CommonMenu.Instance.AddSubMenu(_menu);
             };
+        }
+
+        public static void Shutdown()
+        {
+            Menu.Remove(_menu);
         }
 
         /// <summary>
@@ -526,17 +533,17 @@ namespace LeagueSharp.Common
                 var endP = dashData.Path.Last();
                 var dashPred = GetPositionOnPath(
                     input, new List<Vector2> { input.Unit.ServerPosition.To2D(), endP }, dashData.Speed);
-                if (dashPred.Hitchance >= HitChance.High && dashPred.UnitPosition.To2D().Distance(input.Unit.Position.To2D(), endP, true) < 200 )
+                if (dashPred.Hitchance >= HitChance.High && dashPred.UnitPosition.To2D().Distance(input.Unit.Position.To2D(), endP, true) < 200)
                 {
                     dashPred.CastPosition = dashPred.UnitPosition;
                     dashPred.Hitchance = HitChance.Dashing;
                     return dashPred;
                 }
-                
+
                 //At the end of the dash:
                 if (dashData.Path.PathLength() > 200)
                 {
-                    
+
                     var timeToPoint = input.Delay / 2f + input.From.To2D().Distance(endP) / input.Speed - 0.25f;
                     if (timeToPoint <=
                         input.Unit.Distance(endP) / dashData.Speed + input.RealRadius / input.Unit.MoveSpeed)
@@ -1212,7 +1219,7 @@ namespace LeagueSharp.Common
                                 }
                             }
                             break;
-                            
+
                         case CollisionableObjects.Allies:
                             foreach (var hero in
                                 HeroManager.Allies.FindAll(
@@ -1231,7 +1238,7 @@ namespace LeagueSharp.Common
                                 }
                             }
                             break;
-                            
+
 
                         case CollisionableObjects.Walls:
                             var step = position.Distance(input.From) / 20;

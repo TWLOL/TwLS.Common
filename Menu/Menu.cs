@@ -256,7 +256,7 @@ namespace LeagueSharp.Common
                 {
                     return MenuSettings.BasePosition + this.MenuCount * new Vector2(0, MenuSettings.MenuItemHeight);
                 }
-   
+
 
                 return this.Parent.MyBasePosition;
             }
@@ -284,7 +284,7 @@ namespace LeagueSharp.Common
                        + new Vector2(
                              (this.Parent != null)
                                  ? this.Parent.Position.X + this.Parent.Width
-                                 : (int)this.MyBasePosition.X, 0) 
+                                 : (int)this.MyBasePosition.X, 0)
                                  + this.YLevel * new Vector2(0, MenuSettings.MenuItemHeight);
             }
         }
@@ -309,12 +309,12 @@ namespace LeagueSharp.Common
                 //Hide all the children
                 if (!this.isVisible)
                 {
-                    foreach (var schild in this.Children)
+                    foreach (var schild in this.Children.ToArray())
                     {
                         schild.Visible = false;
                     }
 
-                    foreach (var sitem in this.Items)
+                    foreach (var sitem in this.Items.ToArray())
                     {
                         sitem.Visible = false;
                     }
@@ -387,7 +387,7 @@ namespace LeagueSharp.Common
         /// </returns>
         public static Menu GetMenu(string assemblyname, string menuname)
         {
-            return RootMenus.FirstOrDefault(x => x.Key == assemblyname + "." + menuname).Value;
+            return RootMenus.ToArray().FirstOrDefault(x => x.Key == assemblyname + "." + menuname).Value;
         }
 
         /// <summary>
@@ -507,14 +507,14 @@ namespace LeagueSharp.Common
             }
 
             //Search in our own items
-            foreach (var item in this.Items.Where(item => item.Name == name))
+            foreach (var item in this.Items.ToArray().Where(item => item.Name == name))
             {
                 return item;
             }
 
             //Search in submenus
             return
-                (from subMenu in this.Children where subMenu.Item(name) != null select subMenu.Item(name))
+                (from subMenu in this.Children.ToArray() where subMenu.Item(name) != null select subMenu.Item(name))
                     .FirstOrDefault();
         }
 
@@ -549,7 +549,7 @@ namespace LeagueSharp.Common
         /// </returns>
         public Menu SubMenu(string name)
         {
-            return this.Children.FirstOrDefault(sm => sm.Name == name) ?? this.AddSubMenu(new Menu(name, name));
+            return this.Children.ToArray().FirstOrDefault(sm => sm.Name == name) ?? this.AddSubMenu(new Menu(name, name));
         }
 
         #endregion
@@ -583,12 +583,15 @@ namespace LeagueSharp.Common
                 return;
             }
 
+            var childs = this.Children.ToArray();
+            var items = this.Items.ToArray();
+
             Drawing.Direct3DDevice.SetRenderState(RenderState.AlphaBlendEnable, true);
             MenuDrawHelper.DrawBox(
                 this.Position,
                 this.Width,
                 this.Height,
-                (this.Children.Count > 0 && this.Children[0].Visible || this.Items.Count > 0 && this.Items[0].Visible)
+                (childs.Length > 0 && childs[0].Visible || items.Length > 0 && items[0].Visible)
                     ? MenuSettings.ActiveBackgroundColor
                     : MenuSettings.BackgroundColor,
                 1,
@@ -637,15 +640,15 @@ namespace LeagueSharp.Common
             }
 
             //Draw the menu submenus
-            foreach (var child in this.Children.Where(child => child.Visible))
+            foreach (var child in childs.ToArray().Where(child => child.Visible))
             {
                 child.OnDraw(args);
             }
 
             //Draw the items
-            for (var i = this.Items.Count - 1; i >= 0; i--)
+            for (var i = items.Length - 1; i >= 0; i--)
             {
-                var item = this.Items[i];
+                var item = items[i];
                 if (item.Visible)
                 {
                     item.OnDraw();
@@ -668,12 +671,12 @@ namespace LeagueSharp.Common
         internal void OnReceiveMessage(WindowsMessages message, Vector2 cursorPos, uint key, WndEventComposition args)
         {
             //Spread the message to the menu's children recursively
-            foreach (var child in this.Children)
+            foreach (var child in this.Children.ToArray())
             {
                 child.OnReceiveMessage(message, cursorPos, key, args);
             }
 
-            foreach (var item in this.Items)
+            foreach (var item in this.Items.ToArray())
             {
                 item.OnReceiveMessage(message, cursorPos, key, args);
             }
@@ -691,12 +694,12 @@ namespace LeagueSharp.Common
                     var n = (int)(cursorPos.Y - MenuSettings.BasePosition.Y) / MenuSettings.MenuItemHeight;
                     if (this.MenuCount != n)
                     {
-                        foreach (var schild in this.Children)
+                        foreach (var schild in this.Children.ToArray())
                         {
                             schild.Visible = false;
                         }
 
-                        foreach (var sitem in this.Items)
+                        foreach (var sitem in this.Items.ToArray())
                         {
                             sitem.Visible = false;
                         }
@@ -717,14 +720,14 @@ namespace LeagueSharp.Common
             if (!this.IsRootMenu && this.Parent != null)
             {
                 //Close all the submenus in the level 
-                foreach (var child in this.Parent.Children.Where(child => child.Name != this.Name))
+                foreach (var child in this.Parent.Children.ToArray().Where(child => child.Name != this.Name))
                 {
-                    foreach (var schild in child.Children)
+                    foreach (var schild in child.Children.ToArray())
                     {
                         schild.Visible = false;
                     }
 
-                    foreach (var sitem in child.Items)
+                    foreach (var sitem in child.Items.ToArray())
                     {
                         sitem.Visible = false;
                     }
@@ -732,13 +735,13 @@ namespace LeagueSharp.Common
             }
 
             //Hide or Show the submenus.
-            foreach (var child in this.Children)
+            foreach (var child in this.Children.ToArray())
             {
                 child.Visible = !child.Visible;
             }
 
             //Hide or Show the items.
-            foreach (var item in this.Items)
+            foreach (var item in this.Items.ToArray())
             {
                 item.Visible = !item.Visible;
             }
@@ -763,12 +766,12 @@ namespace LeagueSharp.Common
         /// </param>
         internal void RecursiveSaveAll(ref Dictionary<string, Dictionary<string, byte[]>> dics)
         {
-            foreach (var child in this.Children)
+            foreach (var child in this.Children.ToArray())
             {
                 child.RecursiveSaveAll(ref dics);
             }
 
-            foreach (var item in this.Items)
+            foreach (var item in this.Items.ToArray())
             {
                 item.SaveToFile(ref dics);
             }
@@ -823,6 +826,27 @@ namespace LeagueSharp.Common
         private void UnloadMenuState()
         {
             MenuGlobals.MenuState.Remove(this.uniqueId);
+        }
+
+        public void RemoveMenu(Menu menu)
+        {
+            foreach (var child in this.Children.ToArray())
+            {
+                if (child == menu)
+                {
+                    this.Children.Remove(menu);
+                }
+
+                child.RemoveMenu(menu);
+            }
+        }
+
+        public static void Remove(Menu menu)
+        {
+            foreach (var rootMenu in RootMenus.Values)
+            {
+                rootMenu.RemoveMenu(menu);
+            }
         }
 
         #endregion

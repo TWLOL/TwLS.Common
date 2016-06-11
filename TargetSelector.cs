@@ -1,3 +1,4 @@
+
 #region LICENSE
 
 /*
@@ -101,18 +102,18 @@ namespace LeagueSharp.Common
                     true);
             }
 
-            var a =  (_configMenu.Item("ForceFocusSelectedK").GetValue<KeyBind>().Active ||
-                      _configMenu.Item("ForceFocusSelectedK2").GetValue<KeyBind>().Active) && 
+            var a = (_configMenu.Item("ForceFocusSelectedK").GetValue<KeyBind>().Active ||
+                      _configMenu.Item("ForceFocusSelectedK2").GetValue<KeyBind>().Active) &&
                       _configMenu.Item("ForceFocusSelectedKeys").GetValue<bool>();
 
             _configMenu.Item("ForceFocusSelectedKeys").Permashow(SelectedTarget != null && a);
             _configMenu.Item("ForceFocusSelected").Permashow(_configMenu.Item("ForceFocusSelected").GetValue<bool>());
-            
+
             if (!_configMenu.Item("ResetOnRelease").GetValue<bool>())
             {
                 return;
             }
-            
+
             if (SelectedTarget != null && !a)
             {
                 if (!_configMenu.Item("ForceFocusSelected").GetValue<bool>() && Utils.GameTimeTickCount - _focusTime < 150)
@@ -134,7 +135,7 @@ namespace LeagueSharp.Common
 
         private static void GameOnOnWndProc(WndEventArgs args)
         {
-            if (args.Msg != (uint) WindowsMessages.WM_LBUTTONDOWN)
+            if (args.Msg != (uint)WindowsMessages.WM_LBUTTONDOWN)
             {
                 return;
             }
@@ -203,7 +204,19 @@ namespace LeagueSharp.Common
             return LeagueSharp.Data.Data.Get<ChampionPriorityData>().GetPriority(championName);
         }
 
-        internal static void Initialize()
+        public static void Shutdown()
+        {
+            Menu.Remove(_configMenu);
+
+            Game.OnWndProc -= GameOnOnWndProc;
+
+            if (!CustomTS)
+            {
+                Drawing.OnDraw -= DrawingOnOnDraw;
+            }
+        }
+
+        public static void Initialize()
         {
             CustomEvents.Game.OnGameLoad += args =>
             {
@@ -253,7 +266,7 @@ namespace LeagueSharp.Common
                 config.AddItem(autoPriorityItem);
                 config.AddItem(
                     new MenuItem("TargetingMode", "Target Mode").SetShared()
-                        .SetValue(new StringList(Enum.GetNames(typeof (TargetingMode)))));
+                        .SetValue(new StringList(Enum.GetNames(typeof(TargetingMode)))));
 
 
                 CommonMenu.Instance.AddSubMenu(config);
@@ -293,11 +306,11 @@ namespace LeagueSharp.Common
             {
                 return true;
             }
-            
+
             // Vladimir W
             if (targetBuffs.Contains("VladimirSanguinePool"))
             {
-            	return true;
+                return true;
             }
 
             // Tryndamere's Undying Rage (R)
@@ -372,7 +385,7 @@ namespace LeagueSharp.Common
             IEnumerable<Obj_AI_Hero> ignoredChamps = null,
             Vector3? rangeCheckFrom = null)
         {
-            var t = GetTarget(ObjectManager.Player, spell.Range, 
+            var t = GetTarget(ObjectManager.Player, spell.Range,
                 spell.DamageType, ignoreShield, ignoredChamps, rangeCheckFrom);
 
             if (spell.Collision && spell.GetPrediction(t).Hitchance != HitChance.Collision)
@@ -417,7 +430,7 @@ namespace LeagueSharp.Common
             IEnumerable<Obj_AI_Hero> ignoredChamps = null,
             Vector3? rangeCheckFrom = null, TargetSelectionConditionDelegate conditions = null)
         {
-          
+
             try
             {
                 if (ignoredChamps == null)
@@ -425,7 +438,7 @@ namespace LeagueSharp.Common
                     ignoredChamps = new List<Obj_AI_Hero>();
                 }
 
-                var damageType = (Damage.DamageType) Enum.Parse(typeof(Damage.DamageType), type.ToString());
+                var damageType = (Damage.DamageType)Enum.Parse(typeof(Damage.DamageType), type.ToString());
 
                 if (_configMenu != null && IsValidTarget(
                     SelectedTarget, _configMenu.Item("ForceFocusSelected").GetValue<bool>() ? float.MaxValue : range,
@@ -469,7 +482,7 @@ namespace LeagueSharp.Common
 
                     case TargetingMode.MostAP:
                         return targets.MaxOrDefault(hero => hero.BaseAbilityDamage + hero.FlatMagicDamageMod);
-						
+
                     case TargetingMode.Closest:
                         return
                             targets.MinOrDefault(

@@ -154,7 +154,7 @@ namespace LeagueSharp.Common
 
             if (target.Position.Distance(player.Position) >= 5f)
             {
-               ShowClick(args.Target.Position, ClickType.Attack);
+                ShowClick(args.Target.Position, ClickType.Attack);
             }
         }
 
@@ -291,5 +291,17 @@ namespace LeagueSharp.Common
         }
 
         #endregion
+
+        public static void Shutdown()
+        {
+            CustomEvents.Game.OnGameLoad -= Game_OnGameLoad;
+            Obj_AI_Base.OnNewPath -= DrawFake;
+            Orbwalking.BeforeAttack -= BeforeAttackFake;
+            Spellbook.OnCastSpell -= BeforeSpellCast;
+            Orbwalking.AfterAttack -= AfterAttack;
+            Obj_AI_Base.OnIssueOrder -= OnIssueOrder;
+
+            Menu.Remove(root);
+        }
     }
 }

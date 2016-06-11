@@ -7,6 +7,8 @@ namespace LeagueSharp.Common
     /// </summary>
     internal class Hacks
     {
+        private static Menu menu;
+
         /// <summary>
         /// Initializes this instance.
         /// </summary>
@@ -14,12 +16,12 @@ namespace LeagueSharp.Common
         {
             CustomEvents.Game.OnGameLoad += eventArgs =>
             {
-                var menu = new Menu("Hacks", "Hacks");
+                menu = new Menu("Hacks", "Hacks");
 
                 var draw = menu.AddItem(new MenuItem("DrawingHack", "Disable Drawing").SetValue(false));
                 draw.SetValue(LeagueSharp.Hacks.DisableDrawings);
                 draw.ValueChanged +=
-                    delegate(object sender, OnValueChangeEventArgs args)
+                    delegate (object sender, OnValueChangeEventArgs args)
                     {
                         LeagueSharp.Hacks.DisableDrawings = args.GetNewValue<bool>();
                     };
@@ -28,7 +30,7 @@ namespace LeagueSharp.Common
                     .SetTooltip("Block Game.Say from Assemblies"));
                 say.SetValue(LeagueSharp.Hacks.DisableSay);
                 say.ValueChanged +=
-                    delegate(object sender, OnValueChangeEventArgs args)
+                    delegate (object sender, OnValueChangeEventArgs args)
                     {
                         LeagueSharp.Hacks.DisableSay = args.GetNewValue<bool>();
                     };
@@ -40,7 +42,6 @@ namespace LeagueSharp.Common
                     {
                         LeagueSharp.Hacks.ZoomHack = args.GetNewValue<bool>();
                     };
-
                 menu.AddItem(
                     new MenuItem("ZoomHackInfo", "Note: ZoomHack may be unsafe!", false, FontStyle.Regular, Color.Red));
                 */
@@ -48,12 +49,18 @@ namespace LeagueSharp.Common
                 var tower = menu.AddItem(new MenuItem("TowerHack", "Show Tower Ranges").SetValue(false));
                 tower.SetValue(LeagueSharp.Hacks.TowerRanges);
                 tower.ValueChanged +=
-                    delegate(object sender, OnValueChangeEventArgs args)
+                    delegate (object sender, OnValueChangeEventArgs args)
                     {
                         LeagueSharp.Hacks.TowerRanges = args.GetNewValue<bool>();
                     };
+
                 CommonMenu.Instance.AddSubMenu(menu);
             };
+        }
+
+        public static void Shutdown()
+        {
+            Menu.Remove(menu);
         }
     }
 }

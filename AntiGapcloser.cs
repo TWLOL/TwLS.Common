@@ -145,14 +145,15 @@ namespace LeagueSharp.Common
                     .SpellsList.Select(
                         x =>
                         new Gapcloser
-                            {
-                                ChampionName = x.Key,
-                                SkillType =
+                        {
+                            ChampionName = x.Key,
+                            SkillType =
                                     x.Value.SkillType == LeagueSharp.Data.Enumerations.GapcloserType.Skillshot
                                         ? GapcloserType.Skillshot
                                         : GapcloserType.Targeted,
-                                Slot = x.Value.Slot, SpellName = x.Value.SpellName
-                            })
+                            Slot = x.Value.Slot,
+                            SpellName = x.Value.SpellName
+                        })
                     .ToList();
 
             Game.OnUpdate += Game_OnGameUpdate;
