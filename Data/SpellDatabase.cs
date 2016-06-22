@@ -150,6 +150,7 @@ namespace LeagueSharp.Common.Data
             {
                 return new Spell
                 {
+                    Slot = slot,
                     ChargedBuffName = spellData.ChargedBuffName,
                     ChargedMaxRange = spellData.ChargedMaxRange,
                     ChargedMinRange = spellData.ChargedMinRange,
@@ -174,6 +175,7 @@ namespace LeagueSharp.Common.Data
             {
                 return new Spell
                 {
+                    Slot = slot,
                     Delay = spellData.Delay,
                     Range = spellData.Range,
                     Width =
