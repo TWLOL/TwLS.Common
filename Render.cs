@@ -177,6 +177,10 @@ namespace LeagueSharp.Common
                                 .ToList();
                     }
                 }
+                catch (ThreadAbortException)
+                {
+                    // ignored
+                }
                 catch (Exception e)
                 {
                     Console.WriteLine(@"Cannot prepare RenderObjects for drawing. Ex:" + e);
