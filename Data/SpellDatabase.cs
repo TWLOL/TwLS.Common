@@ -191,7 +191,7 @@ namespace LeagueSharp.Common.Data
                 };
             }
             // Targeted:
-            return new Spell { Range = spellData.Range, Delay = spellData.Delay, Speed = spellData.MissileSpeed };
+            return new Spell { Slot = slot, Range = spellData.Range, Delay = spellData.Delay, Speed = spellData.MissileSpeed, IsSkillshot = false };
         }
 
         /// <summary>
