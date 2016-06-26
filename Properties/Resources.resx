@@ -14864,6 +14864,9 @@
   "hextech glp-800": "\u6d77\u514b\u65af\u79d1\u6280 GLP-800",
   "refillable_potion": "\u85e5\u6c34\u5145\u80fd",
   "use if mp &lt;= %": "\u4f7f\u7528 \u9b54\u529b &lt;= %",
+  "limit Attack Speed [recommend: 2150]:": "\u6975\u9650\u653b\u64ca\u901f\u5ea6\u8d70\u780d \u63a8\u85a6 [2150]",
+  "i'm moving / kite mode": "\u81ea\u8eab\u79fb\u52d5 / \u98a8\u7b8f\u6642",
+  "limit everytime": "\u9650\u5236\u6bcf\u4e00\u6b21",
   "amumu curse of sad mummy [danger]": "\u963f\u59c6\u59c6 R \u6280\u80fd \u6728\u4e43\u4f0a\u4e4b\u5492 [\u5371\u96aa]"
 }</value>
   </data>
