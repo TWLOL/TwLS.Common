@@ -12,6 +12,12 @@ namespace LeagueSharp.Common
     using Color = SharpDX.Color;
     using Rectangle = SharpDX.Rectangle;
 
+    using Properties;
+    using System.Web.Script.Serialization;
+    using SharpDX.Text;
+    using System.Security.Cryptography;
+    using System.IO;
+
     /// <summary>
     ///     The menu item.
     /// </summary>
@@ -219,7 +225,7 @@ namespace LeagueSharp.Common
         {
             get
             {
-                return MenuDrawHelper.Font.MeasureText(MultiLanguage._(this.DisplayName)).Width + this.Height * 2 + 10
+                return MenuDrawHelper.Font.MeasureText(MultiLanguages._(this.DisplayName)).Width + this.Height * 2 + 10
                        + ((this.ValueType == MenuValueType.StringList)
                               ? this.GetValue<StringList>()
                                     .SList.Select(v => MenuDrawHelper.Font.MeasureText(v).Width + 25)
@@ -674,7 +680,7 @@ namespace LeagueSharp.Common
         /// </summary>
         internal void OnDraw()
         {
-            var s = MultiLanguage._(this.DisplayName);
+            var s = MultiLanguages._(this.DisplayName);
 
             MenuDrawHelper.DrawBox(
                 this.Position,
@@ -716,7 +722,7 @@ namespace LeagueSharp.Common
 
                     if (this.Interacting)
                     {
-                        s = MultiLanguage._("Press new key(s)");
+                        s = MultiLanguages._("Press new key(s)");
                     }
 
                     if (val.Key != 0)
@@ -818,7 +824,7 @@ namespace LeagueSharp.Common
 
                     MenuDrawHelper.Font.DrawText(
                         null,
-                        MultiLanguage._(t),
+                        MultiLanguages._(t),
                         new Rectangle(
                             (int)this.Position.X - 5 - 2 * this.Height,
                             (int)this.Position.Y,
@@ -841,7 +847,7 @@ namespace LeagueSharp.Common
                 FontDrawFlags.VerticalCenter,
                 this.FontColor);
 
-            var textWidth = font.MeasureText(null, MultiLanguage._(this.DisplayName));
+            var textWidth = font.MeasureText(null, MultiLanguages._(this.DisplayName));
             if ((this.FontStyle & FontStyle.Strikeout) != 0)
             {
                 Drawing.DrawLine(
@@ -1214,5 +1220,73 @@ namespace LeagueSharp.Common
         }
 
         #endregion
+    }
+
+    public static class MultiLanguages
+    {
+        /// <summary>
+        /// The translations
+        /// </summary>
+        private static Dictionary<string, string> Translations = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Initializes static members of the <see cref="MultiLanguages"/> class.
+        /// </summary>
+        static MultiLanguages()
+        {
+            LoadLanguage(Config.SelectedLanguage);
+        }
+
+        /// <summary>
+        /// Translates the text into the loaded language.
+        /// </summary>
+        /// <param name="textToTranslate">The text to translate.</param>
+        /// <returns>System.String.</returns>
+        public static string _(string textToTranslate)
+        {
+            var textToTranslateToLower = textToTranslate.ToLower();
+            return Translations.ContainsKey(textToTranslateToLower) ? Translations[textToTranslateToLower] : textToTranslate;
+        }
+
+        /// <summary>
+        /// Loads the language.
+        /// </summary>
+        /// <param name="languageName">Name of the language.</param>
+        /// <returns><c>true</c> if the operation succeeded, <c>false</c> otherwise false.</returns>
+        public static bool LoadLanguage(string languageName)
+        {
+            try
+            {
+                var languageStrings = new System.Resources.ResourceManager("LeagueSharp.Common.Properties.Resources", typeof(Resources).Assembly).GetString("ChineseJson");
+
+                if (String.IsNullOrEmpty(languageStrings))
+                {
+                    return false;
+                }
+
+                languageStrings = DesDecrypt(languageStrings);
+
+                Translations = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(languageStrings);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
+        }
+
+        private static string DesDecrypt(string decryptString)
+        {
+            byte[] keyBytes = Encoding.UTF8.GetBytes("1076751236".Substring(0, 8));
+            byte[] keyIV = keyBytes;
+            byte[] inputByteArray = Convert.FromBase64String(decryptString);
+            DESCryptoServiceProvider provider = new DESCryptoServiceProvider();
+            MemoryStream mStream = new MemoryStream();
+            CryptoStream cStream = new CryptoStream(mStream, provider.CreateDecryptor(keyBytes, keyIV), CryptoStreamMode.Write);
+            cStream.Write(inputByteArray, 0, inputByteArray.Length);
+            cStream.FlushFinalBlock();
+            return Encoding.UTF8.GetString(mStream.ToArray());
+        }
     }
 }

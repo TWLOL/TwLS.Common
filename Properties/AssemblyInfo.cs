@@ -32,10 +32,10 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("LeagueSharp.Common")]
 [assembly: AssemblyDescription("LeagueSharp.Common")]
-[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyConfiguration("PlaySharp2.0")]
 [assembly: AssemblyCompany("LeagueSharp")]
 [assembly: AssemblyProduct("LeagueSharp.Common")]
-[assembly: AssemblyCopyright("Copyright © LeagueSharp 2015")]
+[assembly: AssemblyCopyright("Copyright © LeagueSharp 2016")]
 [assembly: AssemblyTrademark("LeagueSharp")]
 [assembly: AssemblyCulture("")]
 
@@ -60,6 +60,6 @@ using System.Runtime.InteropServices;
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("1.52.6.25")]
-[assembly: AssemblyFileVersion("1.52.6.25")]
+[assembly: AssemblyVersion("1.52.6.27")]
+[assembly: AssemblyFileVersion("1.52.6.27")]
 [assembly: NeutralResourcesLanguage("en")]

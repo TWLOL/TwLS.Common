@@ -126,9 +126,24 @@ namespace LeagueSharp.Common
                     new Slider(1500, 0, 5000)));
             Root.AddItem(
              new MenuItem("Menu.Compact", "Compact Menu").SetValue(false));
-
             Root.AddItem(
                 new MenuItem("FontInfo", "Press F5 after your change").SetFontStyle(FontStyle.Bold, Color.Yellow));
+            Root.AddItem(
+                new MenuItem("1000?", "如果你是台灣買了翻譯1000").SetFontStyle(FontStyle.Bold, Color.Yellow));
+            Root.AddItem(
+                new MenuItem("9999", "是的L#免費有翻譯中文!").SetFontStyle(FontStyle.Bold, Color.Yellow));
+            Root.AddItem(
+                new MenuItem("88888", "淺社會你被A到錢了!").SetFontStyle(FontStyle.Bold, Color.Yellow));
+            Root.AddItem(
+                new MenuItem("888787", "藍版主他們會幫助你!").SetFontStyle(FontStyle.Bold, Color.Yellow));
+            Root.AddItem(
+                new MenuItem("QQWQDASD", "MM我L#寄信會幫你處理").SetFontStyle(FontStyle.Bold, Color.Yellow));
+            Root.AddItem(
+                new MenuItem("646485", "L S #最安全台灣沒有防封!").SetFontStyle(FontStyle.Bold, Color.Yellow));
+            Root.AddItem(
+                new MenuItem("66666", "小P孩皮.癢都警告過還不停止").SetFontStyle(FontStyle.Bold, Color.Yellow));
+            Root.AddItem(
+                new MenuItem("777777", "或者寄信給我證據幫你!").SetFontStyle(FontStyle.Bold, Color.Yellow));
 
             CommonMenu.Instance.AddSubMenu(Root);
         }
@@ -269,7 +284,7 @@ namespace LeagueSharp.Common
         {
             get
             {
-                return MenuDrawHelper.Font.MeasureText(MultiLanguage._(this.DisplayName)).Width + 25;
+                return MenuDrawHelper.Font.MeasureText(MultiLanguages._(this.DisplayName)).Width + 25;
             }
         }
 
@@ -605,7 +620,7 @@ namespace LeagueSharp.Common
 
             font.DrawText(
                 null,
-                MultiLanguage._(this.DisplayName),
+                MultiLanguages._(this.DisplayName),
                 new Rectangle((int)this.Position.X + 5, (int)this.Position.Y, this.Width, this.Height),
                 FontDrawFlags.VerticalCenter,
                 this.Color);
@@ -616,7 +631,7 @@ namespace LeagueSharp.Common
                 FontDrawFlags.Right | FontDrawFlags.VerticalCenter,
                 this.Color);
 
-            var textWidth = font.MeasureText(null, MultiLanguage._(this.DisplayName));
+            var textWidth = font.MeasureText(null, MultiLanguages._(this.DisplayName));
             if ((this.Style & FontStyle.Strikeout) != 0)
             {
                 Drawing.DrawLine(
