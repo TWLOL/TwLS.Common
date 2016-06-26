@@ -1,7 +1,8 @@
 License  League Sharp 
 =================
 
-Taiwan Numerous Assembly Translation  Language
+Taiwan .Numerous. Assembly. Translation.Language
+
 Copyright 2014 - 2016 LeagueSharp
 LeagueSharp.Common is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
