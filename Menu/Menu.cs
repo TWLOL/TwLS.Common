@@ -129,21 +129,21 @@ namespace LeagueSharp.Common
             Root.AddItem(
                 new MenuItem("FontInfo", "Press F5 after your change").SetFontStyle(FontStyle.Bold, Color.Yellow));
             Root.AddItem(
-                new MenuItem("1000?", "如果你是台灣買了翻譯1000").SetFontStyle(FontStyle.Bold, Color.Yellow));
+                new MenuItem("1000?", "\u5982\u679c\u4f60\u662f\u53f0\u7063\u8cb7\u4e86\u7ffb\u8b6f\u0031\u0030\u0030\u0030").SetFontStyle(FontStyle.Bold, Color.Yellow));
             Root.AddItem(
-                new MenuItem("9999", "是的L#免費有翻譯中文!").SetFontStyle(FontStyle.Bold, Color.Yellow));
+                new MenuItem("9999", "\u662f\u7684\u004c\u0023\u514d\u8cbb\u6709\u7ffb\u8b6f\u4e2d\u6587\u0021").SetFontStyle(FontStyle.Bold, Color.Yellow));
             Root.AddItem(
-                new MenuItem("88888", "淺社會你被A到錢了!").SetFontStyle(FontStyle.Bold, Color.Yellow));
+                new MenuItem("88888", "\u6dfa\u793e\u6703\u4f60\u88ab\u0041\u5230\u9322\u4e86\u0021").SetFontStyle(FontStyle.Bold, Color.Yellow));
             Root.AddItem(
-                new MenuItem("888787", "藍版主他們會幫助你!").SetFontStyle(FontStyle.Bold, Color.Yellow));
+                new MenuItem("888787", "\u85cd\u7248\u4e3b\u4ed6\u5011\u6703\u5e6b\u52a9\u4f60\u0021").SetFontStyle(FontStyle.Bold, Color.Yellow));
             Root.AddItem(
-                new MenuItem("QQWQDASD", "MM我L#寄信會幫你處理").SetFontStyle(FontStyle.Bold, Color.Yellow));
+                new MenuItem("QQWQDASD", "\u004d\u004d\u6211\u004c\u0023\u5bc4\u4fe1\u6703\u5e6b\u4f60\u8655\u7406").SetFontStyle(FontStyle.Bold, Color.Yellow));
             Root.AddItem(
-                new MenuItem("646485", "L S #最安全台灣沒有防封!").SetFontStyle(FontStyle.Bold, Color.Yellow));
+                new MenuItem("646485", "\u004c\u0020\u0053\u0020\u0023\u6700\u5b89\u5168\u53f0\u7063\u6c92\u6709\u9632\u5c01!").SetFontStyle(FontStyle.Bold, Color.Yellow));
             Root.AddItem(
-                new MenuItem("66666", "小P孩皮.癢都警告過還不停止").SetFontStyle(FontStyle.Bold, Color.Yellow));
+                new MenuItem("66666", "\u5c0f\u0050\u5b69\u76ae\u002e\u7662\u90fd\u8b66\u544a\u904e\u9084\u4e0d\u505c\u6b62").SetFontStyle(FontStyle.Bold, Color.Yellow));
             Root.AddItem(
-                new MenuItem("777777", "或者寄信給我證據幫你!").SetFontStyle(FontStyle.Bold, Color.Yellow));
+                new MenuItem("777777", "\u6216\u8005\u5bc4\u4fe1\u7d66\u6211\u8b49\u64da\u5e6b\u4f60!").SetFontStyle(FontStyle.Bold, Color.Yellow));
 
             CommonMenu.Instance.AddSubMenu(Root);
         }
