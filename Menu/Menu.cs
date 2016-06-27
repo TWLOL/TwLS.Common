@@ -284,7 +284,7 @@ namespace LeagueSharp.Common
         {
             get
             {
-                return MenuDrawHelper.Font.MeasureText(MultiLanguages._(this.DisplayName)).Width + 25;
+                return MenuDrawHelper.Font.MeasureText(MultiLanguage._(this.DisplayName)).Width + 25;
             }
         }
 
@@ -620,7 +620,7 @@ namespace LeagueSharp.Common
 
             font.DrawText(
                 null,
-                MultiLanguages._(this.DisplayName),
+                MultiLanguage._(this.DisplayName),
                 new Rectangle((int)this.Position.X + 5, (int)this.Position.Y, this.Width, this.Height),
                 FontDrawFlags.VerticalCenter,
                 this.Color);
@@ -631,7 +631,7 @@ namespace LeagueSharp.Common
                 FontDrawFlags.Right | FontDrawFlags.VerticalCenter,
                 this.Color);
 
-            var textWidth = font.MeasureText(null, MultiLanguages._(this.DisplayName));
+            var textWidth = font.MeasureText(null, MultiLanguage._(this.DisplayName));
             if ((this.Style & FontStyle.Strikeout) != 0)
             {
                 Drawing.DrawLine(
