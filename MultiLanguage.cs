@@ -71,7 +71,7 @@ namespace LeagueSharp.Common
             try
             {
                 var languageStrings = new ResourceManager("LeagueSharp.Common.Properties.Resources", typeof(Resources).Assembly).GetString(languageName + "Json");
-                
+
                 if (String.IsNullOrEmpty(languageStrings))
                 {
                     return false;

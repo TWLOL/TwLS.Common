@@ -253,7 +253,7 @@ namespace LeagueSharp.Common
                 {
                     return MenuSettings.BasePosition + this.MenuCount * new Vector2(0, MenuSettings.MenuItemHeight);
                 }
-   
+
 
                 return this.Parent.MyBasePosition;
             }
@@ -281,7 +281,7 @@ namespace LeagueSharp.Common
                        + new Vector2(
                              (this.Parent != null)
                                  ? this.Parent.Position.X + this.Parent.Width
-                                 : (int)this.MyBasePosition.X, 0) 
+                                 : (int)this.MyBasePosition.X, 0)
                                  + this.YLevel * new Vector2(0, MenuSettings.MenuItemHeight);
             }
         }
