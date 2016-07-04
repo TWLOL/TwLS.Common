@@ -219,7 +219,7 @@ namespace LeagueSharp.Common
         {
             get
             {
-                return MenuDrawHelper.Font.MeasureText(MultiLanguage._(this.DisplayName)).Width + this.Height * 2 + 10
+                return MenuDrawHelper.Font.MeasureText(MultiLanguages._(this.DisplayName)).Width + this.Height * 2 + 10
                        + ((this.ValueType == MenuValueType.StringList)
                               ? this.GetValue<StringList>()
                                     .SList.Select(v => MenuDrawHelper.Font.MeasureText(v).Width + 25)
@@ -674,7 +674,7 @@ namespace LeagueSharp.Common
         /// </summary>
         internal void OnDraw()
         {
-            var s = MultiLanguage._(this.DisplayName);
+            var s = MultiLanguages._(this.DisplayName);
 
             MenuDrawHelper.DrawBox(
                 this.Position,
@@ -716,7 +716,7 @@ namespace LeagueSharp.Common
 
                     if (this.Interacting)
                     {
-                        s = MultiLanguage._("Press new key(s)");
+                        s = MultiLanguages._("Press new key(s)");
                     }
 
                     if (val.Key != 0)
@@ -818,7 +818,7 @@ namespace LeagueSharp.Common
 
                     MenuDrawHelper.Font.DrawText(
                         null,
-                        MultiLanguage._(t),
+                        MultiLanguages._(t),
                         new Rectangle(
                             (int)this.Position.X - 5 - 2 * this.Height,
                             (int)this.Position.Y,
@@ -841,7 +841,7 @@ namespace LeagueSharp.Common
                 FontDrawFlags.VerticalCenter,
                 this.FontColor);
 
-            var textWidth = font.MeasureText(null, MultiLanguage._(this.DisplayName));
+            var textWidth = font.MeasureText(null, MultiLanguages._(this.DisplayName));
             if ((this.FontStyle & FontStyle.Strikeout) != 0)
             {
                 Drawing.DrawLine(

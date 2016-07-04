@@ -43,7 +43,7 @@ namespace LeagueSharp.Common
         private static Dictionary<string, string> Translations = new Dictionary<string, string>();
 
         /// <summary>
-        /// Initializes static members of the <see cref="MultiLanguage"/> class.
+        /// Initializes static members of the <see cref="MultiLanguages"/> class.
         /// </summary>
         static MultiLanguage()
         {
