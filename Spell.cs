@@ -24,9 +24,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LeagueSharp.Common.Data;
 using LeagueSharp.Data.Enumerations;
-using System.Linq;
 using SharpDX;
 
 #endregion
@@ -130,7 +130,7 @@ namespace LeagueSharp.Common
         }
 
         /// <summary>
-        /// Initializes a spell using SpellDb defined values
+        ///     Initializes a spell using SpellDb defined values
         /// </summary>
         /// <param name="slot">The SpellSlot</param>
         /// <param name="useSpellDbValues">Doesn't matter if it's true or false, using this override will automatically use SpellDb Values.</param>
@@ -148,10 +148,13 @@ namespace LeagueSharp.Common
                 ChargeDuration = spellData.ChargeDuration;
                 Delay = spellData.Delay;
                 Range = spellData.Range;
-                Width = spellData.Radius > 0 && spellData.Radius < 30000 ? spellData.Radius :
-                ((spellData.Width > 0 && spellData.Width < 30000) ? spellData.Width : 30000);
-                Collision = (spellData.CollisionObjects != null && spellData.CollisionObjects.Any(
-                obj => obj == LeagueSharp.Data.Enumerations.CollisionableObjects.Minions));
+                Width = spellData.Radius > 0 && spellData.Radius < 30000
+                    ? spellData.Radius
+                    : ((spellData.Width > 0 && spellData.Width < 30000) ? spellData.Width : 30000);
+                Collision = (spellData.CollisionObjects != null
+                             &&
+                             spellData.CollisionObjects.Any(
+                                 obj => obj == LeagueSharp.Data.Enumerations.CollisionableObjects.Minions));
                 Speed = spellData.MissileSpeed;
                 IsChargedSpell = true;
                 Type = SpellDatabase.GetSkillshotTypeFromSpellType(spellData.SpellType);
@@ -162,10 +165,13 @@ namespace LeagueSharp.Common
             {
                 Delay = spellData.Delay;
                 Range = spellData.Range;
-                Width = spellData.Radius > 0 && spellData.Radius < 30000 ? spellData.Radius :
-                ((spellData.Width > 0 && spellData.Width < 30000) ? spellData.Width : 30000);
-                Collision = (spellData.CollisionObjects != null && spellData.CollisionObjects.Any(
-                obj => obj == LeagueSharp.Data.Enumerations.CollisionableObjects.Minions));
+                Width = spellData.Radius > 0 && spellData.Radius < 30000
+                    ? spellData.Radius
+                    : ((spellData.Width > 0 && spellData.Width < 30000) ? spellData.Width : 30000);
+                Collision = (spellData.CollisionObjects != null
+                             &&
+                             spellData.CollisionObjects.Any(
+                                 obj => obj == LeagueSharp.Data.Enumerations.CollisionableObjects.Minions));
                 Speed = spellData.MissileSpeed;
                 IsSkillshot = true;
                 Type = SpellDatabase.GetSkillshotTypeFromSpellType(spellData.SpellType);
@@ -178,7 +184,7 @@ namespace LeagueSharp.Common
             IsSkillshot = false;
         }
 
-        /// </summary>
+        /// <summary>
         /// Gets or sets the name of the charged buff.
         /// </summary>
         /// <value>The name of the charged buff.</value>
@@ -278,7 +284,7 @@ namespace LeagueSharp.Common
             set
             {
                 _width = value;
-                WidthSqr = value * value;
+                WidthSqr = value*value;
             }
         }
 
@@ -298,6 +304,16 @@ namespace LeagueSharp.Common
         }
 
         /// <summary>
+        /// Adds the Players hitbox to the range value
+        /// </summary>
+        public bool AddSelfHitboxToRange { get; set; }
+
+        /// <summary>
+        /// Adds the Enemies hitbox to the range value
+        /// </summary>
+        public bool AddEnemyHitboxToRange { get; set; }
+
+        /// <summary>
         /// Gets or sets the range.
         /// </summary>
         /// <value>The range.</value>
@@ -305,9 +321,16 @@ namespace LeagueSharp.Common
         {
             get
             {
+                var baseRange = _range;
+
+                if (AddSelfHitboxToRange)
+                {
+                    baseRange += ObjectManager.Player.BoundingRadius;
+                }
+
                 if (!IsChargedSpell)
                 {
-                    return _range;
+                    return baseRange;
                 }
 
                 if (IsCharging)
@@ -315,13 +338,42 @@ namespace LeagueSharp.Common
                     return ChargedMinRange +
                            Math.Min(
                                ChargedMaxRange - ChargedMinRange,
-                               (Utils.TickCount - _chargedCastedT) * (ChargedMaxRange - ChargedMinRange) /
+                               (Utils.TickCount - _chargedCastedT)*(ChargedMaxRange - ChargedMinRange)/
                                ChargeDuration - 150);
                 }
 
                 return ChargedMaxRange;
             }
+
             set { _range = value; }
+        }
+
+        /// <summary>
+        /// Gets the range the spell has when casted to target
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public float GetRange(Obj_AI_Base target)
+        {
+            var result = Range;
+
+            if (AddEnemyHitboxToRange && target != null)
+            {
+                result += target.BoundingRadius;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the range sqared the spell has when casted to target
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public float GetRangeSqr(Obj_AI_Base target)
+        {
+            var result = GetRange(target);
+            return result * result;
         }
 
         /// <summary>
@@ -330,7 +382,7 @@ namespace LeagueSharp.Common
         /// <value>The range squared.</value>
         public float RangeSqr
         {
-            get { return Range * Range; }
+            get { return Range*Range; }
         }
 
         /// <summary>
@@ -441,7 +493,7 @@ namespace LeagueSharp.Common
             ChargedBuffName = buffName;
             ChargedMinRange = minRange;
             ChargedMaxRange = maxRange;
-            ChargeDuration = (int)(deltaT * 1000);
+            ChargeDuration = (int) (deltaT*1000);
             _chargedCastedT = 0;
 
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
@@ -558,7 +610,7 @@ namespace LeagueSharp.Common
                         RangeCheckFrom = RangeCheckFrom,
                         Aoe = aoe,
                         CollisionObjects =
-                            collisionable ?? new[] { CollisionableObjects.Heroes, CollisionableObjects.Minions }
+                            collisionable ?? new[] {CollisionableObjects.Heroes, CollisionableObjects.Minions}
                     });
         }
 
@@ -628,7 +680,7 @@ namespace LeagueSharp.Common
             if (!IsSkillshot)
             {
                 //Target out of range
-                if (RangeCheckFrom.Distance(unit.ServerPosition, true) > RangeSqr)
+                if (RangeCheckFrom.Distance(unit.ServerPosition, true) > GetRangeSqr(unit))
                 {
                     return CastStates.OutOfRange;
                 }
@@ -718,7 +770,7 @@ namespace LeagueSharp.Common
         /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
         public bool CastOnUnit(Obj_AI_Base unit, bool packetCast = false)
         {
-            if (!Slot.IsReady() || From.Distance(unit.ServerPosition, true) > RangeSqr)
+            if (!Slot.IsReady() || From.Distance(unit.ServerPosition, true) > GetRangeSqr(unit))
             {
                 return false;
             }
@@ -992,7 +1044,7 @@ namespace LeagueSharp.Common
         /// <returns>System.Single.</returns>
         public float GetDamage(Obj_AI_Base target, int stage = 0)
         {
-            return (float)ObjectManager.Player.GetSpellDamage(target, Slot, stage);
+            return (float) ObjectManager.Player.GetSpellDamage(target, Slot, stage);
         }
 
         /// <summary>
@@ -1073,7 +1125,7 @@ namespace LeagueSharp.Common
                     }
                     break;
                 case SkillshotType.SkillshotCone:
-                    var edge1 = (castPosition.To2D() - From.To2D()).Rotated(-Width / 2);
+                    var edge1 = (castPosition.To2D() - From.To2D()).Rotated(-Width/2);
                     var edge2 = edge1.Rotated(Width);
                     var v = point.To2D() - From.To2D();
                     if (point.To2D().Distance(From, true) < RangeSqr && edge1.CrossProduct(v) > 0 &&
@@ -1128,7 +1180,7 @@ namespace LeagueSharp.Common
         /// <returns><c>true</c> if the specified location is in range of the spell; otherwise, <c>false</c>.</returns>
         public bool IsInRange(Vector2 point, float range = -1)
         {
-            return RangeCheckFrom.To2D().Distance(point, true) < (range < 0 ? RangeSqr : range * range);
+            return RangeCheckFrom.To2D().Distance(point, true) < (range < 0 ? RangeSqr : range*range);
         }
 
         /// <summary>
@@ -1192,7 +1244,7 @@ namespace LeagueSharp.Common
         /// Last time casting has been issued
         /// </summary>
         private int _cancelSpellIssue;
-
+        
 
         /// <summary>
         /// Spell setings
@@ -1312,8 +1364,8 @@ namespace LeagueSharp.Common
         private void OnOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
         {
             if (!sender.IsMe) return;
-
-            if (!IsChanneling) return;
+            
+            if (!IsChanneling) return;  
 
             if (args.Order == GameObjectOrder.MoveTo || args.Order == GameObjectOrder.AttackTo ||
                 args.Order == GameObjectOrder.AttackUnit || args.Order == GameObjectOrder.AutoAttack)
@@ -1330,7 +1382,7 @@ namespace LeagueSharp.Common
         {
 
             if (!CanBeCanceledByUser) return;
-
+            
             if (args.Msg == 517)
             {
                 IsChanneling = false;
