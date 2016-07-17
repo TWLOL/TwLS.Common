@@ -116,15 +116,14 @@ namespace LeagueSharp.Common
         /// </summary>
         private static readonly string[] AttackResets =
         {
-            "dariusnoxiantacticsonh", "fioraflurry", "garenq",
+            "dariusnoxiantacticsonh", "fiorae", "garenq",
             "gravesmove", "hecarimrapidslash", "jaxempowertwo", "jaycehypercharge", "leonashieldofdaybreak", "luciane",
             "monkeykingdoubleattack", "mordekaisermaceofspades", "nasusq", "nautiluspiercinggaze", "netherblade",
-            "gangplankqwrapper", "powerfist", "renektonpreexecute", "rengarq",
+            "gangplankqwrapper", "powerfist", "renektonpreexecute", "rengarq", "aspectofthecougar",
             "shyvanadoubleattack", "sivirw", "takedown", "talonnoxiandiplomacy", "trundletrollsmash", "vaynetumble",
             "vie", "volibearq", "xenzhaocombotarget", "yorickspectral", "reksaiq", "itemtitanichydracleave", "masochism",
             "illaoiw", "elisespiderw", "fiorae", "meditate", "sejuaninorthernwinds", "asheq"
         };
-
 
         /// <summary>
         ///     Spells that are not attacks even if they have the "attack" word in their name.
@@ -414,7 +413,7 @@ namespace LeagueSharp.Common
             var myRange = GetRealAutoAttackRange(target);
             return
                 Vector2.DistanceSquared(
-                    target is Obj_AI_Base ? ((Obj_AI_Base) target).ServerPosition.To2D() : target.Position.To2D(),
+                    target is Obj_AI_Base ? ((Obj_AI_Base)target).ServerPosition.To2D() : target.Position.To2D(),
                     Player.ServerPosition.To2D()) <= myRange * myRange;
         }
 
@@ -450,7 +449,7 @@ namespace LeagueSharp.Common
 
             if (Player.ChampionName == "Jhin")
             {
-                if(Player.HasBuff("JhinPassiveReload"))
+                if (Player.HasBuff("JhinPassiveReload"))
                 {
                     return false;
                 }
@@ -746,7 +745,7 @@ namespace LeagueSharp.Common
 
                     if (Spell.Target is Obj_AI_Base)
                     {
-                        var target = (Obj_AI_Base) Spell.Target;
+                        var target = (Obj_AI_Base)Spell.Target;
                         if (target.IsValid)
                         {
                             FireOnTargetSwitch(target);
@@ -1086,7 +1085,7 @@ namespace LeagueSharp.Common
                                 minion.IsValidTarget() && minion.Team != GameObjectTeam.Neutral &&
                                 InAutoAttackRange(minion) && MinionManager.IsMinion(minion, false) &&
                                 HealthPrediction.LaneClearHealthPrediction(
-                                    minion, (int) (Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay) <=
+                                    minion, (int)(Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay) <=
                                 Player.GetAutoAttackDamage(minion));
             }
 
@@ -1132,12 +1131,12 @@ namespace LeagueSharp.Common
 
                 //GankPlank barrels
                 var attackGankPlankBarrels = _config.Item("AttackGPBarrel").GetValue<StringList>().SelectedIndex;
-                if (attackGankPlankBarrels != 2 && (attackGankPlankBarrels == 0 || (mode == OrbwalkingMode.LaneClear  || mode == OrbwalkingMode.Mixed ||
+                if (attackGankPlankBarrels != 2 && (attackGankPlankBarrels == 0 || (mode == OrbwalkingMode.LaneClear || mode == OrbwalkingMode.Mixed ||
                         mode == OrbwalkingMode.LastHit || mode == OrbwalkingMode.Freeze)))
                 {
                     var enemyGangPlank = HeroManager.Enemies.FirstOrDefault(e => e.ChampionName.Equals("gangplank", StringComparison.InvariantCultureIgnoreCase));
 
-                    if (enemyGangPlank != null )
+                    if (enemyGangPlank != null)
                     {
                         var barrels = ObjectManager.Get<Obj_AI_Minion>()
                             .Where(minion => minion.Team == GameObjectTeam.Neutral && minion.CharData.BaseSkinName == "gangplankbarrel" && minion.IsHPBarRendered && minion.IsValidTarget() && InAutoAttackRange(minion));
@@ -1191,9 +1190,9 @@ namespace LeagueSharp.Common
 
                     foreach (var minion in MinionList)
                     {
-                        var t = (int) (Player.AttackCastDelay * 1000) - 100 + Game.Ping / 2 +
-                                1000 * (int) Math.Max(0, Player.Distance(minion) - Player.BoundingRadius) /
-                                (int) GetMyProjectileSpeed();
+                        var t = (int)(Player.AttackCastDelay * 1000) - 100 + Game.Ping / 2 +
+                                1000 * (int)Math.Max(0, Player.Distance(minion) - Player.BoundingRadius) /
+                                (int)GetMyProjectileSpeed();
 
                         if (mode == OrbwalkingMode.Freeze)
                         {
@@ -1336,20 +1335,20 @@ namespace LeagueSharp.Common
                                 var turretStarTick = HealthPrediction.TurretAggroStartTick(
                                     turretMinion as Obj_AI_Minion);
                                 // from healthprediction (don't blame me :S)
-                                var turretLandTick = turretStarTick + (int) (closestTower.AttackCastDelay * 1000) +
+                                var turretLandTick = turretStarTick + (int)(closestTower.AttackCastDelay * 1000) +
                                                      1000 *
                                                      Math.Max(
                                                          0,
                                                          (int)
                                                              (turretMinion.Distance(closestTower) -
                                                               closestTower.BoundingRadius)) /
-                                                     (int) (closestTower.BasicAttack.MissileSpeed + 70);
+                                                     (int)(closestTower.BasicAttack.MissileSpeed + 70);
                                 // calculate the HP before try to balance it
                                 for (float i = turretLandTick + 50;
                                     i < turretLandTick + 10 * closestTower.AttackDelay * 1000 + 50;
                                     i = i + closestTower.AttackDelay * 1000)
                                 {
-                                    var time = (int) i - Utils.GameTimeTickCount + Game.Ping / 2;
+                                    var time = (int)i - Utils.GameTimeTickCount + Game.Ping / 2;
                                     var predHP =
                                         (int)
                                             HealthPrediction.LaneClearHealthPrediction(
@@ -1367,15 +1366,15 @@ namespace LeagueSharp.Common
                                 // calculate the hits is needed and possibilty to balance
                                 if (hpLeft == 0 && turretAttackCount != 0 && hpLeftBeforeDie != 0)
                                 {
-                                    var damage = (int) Player.GetAutoAttackDamage(turretMinion, true);
+                                    var damage = (int)Player.GetAutoAttackDamage(turretMinion, true);
                                     var hits = hpLeftBeforeDie / damage;
                                     var timeBeforeDie = turretLandTick +
                                                         (turretAttackCount + 1) *
-                                                        (int) (closestTower.AttackDelay * 1000) -
+                                                        (int)(closestTower.AttackDelay * 1000) -
                                                         Utils.GameTimeTickCount;
-                                    var timeUntilAttackReady = LastAATick + (int) (Player.AttackDelay * 1000) >
+                                    var timeUntilAttackReady = LastAATick + (int)(Player.AttackDelay * 1000) >
                                                                Utils.GameTimeTickCount + Game.Ping / 2 + 25
-                                        ? LastAATick + (int) (Player.AttackDelay * 1000) -
+                                        ? LastAATick + (int)(Player.AttackDelay * 1000) -
                                           (Utils.GameTimeTickCount + Game.Ping / 2 + 25)
                                         : 0;
                                     var timeToLandAttack = Player.IsMelee
@@ -1416,9 +1415,9 @@ namespace LeagueSharp.Common
                                             x.NetworkId != turretMinion.NetworkId && x is Obj_AI_Minion &&
                                             !HealthPrediction.HasMinionAggro(x as Obj_AI_Minion)))
                                 {
-                                    var playerDamage = (int) Player.GetAutoAttackDamage(minion);
-                                    var turretDamage = (int) closestTower.GetAutoAttackDamage(minion, true);
-                                    var leftHP = (int) minion.Health % turretDamage;
+                                    var playerDamage = (int)Player.GetAutoAttackDamage(minion);
+                                    var turretDamage = (int)closestTower.GetAutoAttackDamage(minion, true);
+                                    var leftHP = (int)minion.Health % turretDamage;
                                     if (leftHP > playerDamage)
                                     {
                                         return minion;
@@ -1431,7 +1430,7 @@ namespace LeagueSharp.Common
                                 if (lastminion != null && minions.Count() >= 2)
                                 {
                                     if (1f / Player.AttackDelay >= 1f &&
-                                        (int) (turretAttackCount * closestTower.AttackDelay / Player.AttackDelay) *
+                                        (int)(turretAttackCount * closestTower.AttackDelay / Player.AttackDelay) *
                                         Player.GetAutoAttackDamage(lastminion) > lastminion.Health)
                                     {
                                         return lastminion;
@@ -1456,9 +1455,9 @@ namespace LeagueSharp.Common
                                 {
                                     if (closestTower != null)
                                     {
-                                        var playerDamage = (int) Player.GetAutoAttackDamage(minion);
-                                        var turretDamage = (int) closestTower.GetAutoAttackDamage(minion, true);
-                                        var leftHP = (int) minion.Health % turretDamage;
+                                        var playerDamage = (int)Player.GetAutoAttackDamage(minion);
+                                        var turretDamage = (int)closestTower.GetAutoAttackDamage(minion, true);
+                                        var leftHP = (int)minion.Health % turretDamage;
                                         if (leftHP > playerDamage)
                                         {
                                             return minion;
@@ -1490,7 +1489,7 @@ namespace LeagueSharp.Common
                         if (_prevMinion.IsValidTarget() && InAutoAttackRange(_prevMinion))
                         {
                             var predHealth = HealthPrediction.LaneClearHealthPrediction(
-                                _prevMinion, (int) (Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay);
+                                _prevMinion, (int)(Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay);
                             if (predHealth >= 2 * Player.GetAutoAttackDamage(_prevMinion) ||
                                 Math.Abs(predHealth - _prevMinion.Health) < float.Epsilon)
                             {
@@ -1503,18 +1502,18 @@ namespace LeagueSharp.Common
                                 .Where(
                                     minion =>
                                         minion.IsValidTarget() && InAutoAttackRange(minion) && ShouldAttackMinion(minion))
-                            let predHealth =
-                                HealthPrediction.LaneClearHealthPrediction(
-                                    minion, (int) (Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay)
-                            where
-                                predHealth >= 2 * Player.GetAutoAttackDamage(minion) ||
-                                Math.Abs(predHealth - minion.Health) < float.Epsilon
-                            select minion).MaxOrDefault(
+                                  let predHealth =
+                                      HealthPrediction.LaneClearHealthPrediction(
+                                          minion, (int)(Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay)
+                                  where
+                                      predHealth >= 2 * Player.GetAutoAttackDamage(minion) ||
+                                      Math.Abs(predHealth - minion.Health) < float.Epsilon
+                                  select minion).MaxOrDefault(
                                 m => !MinionManager.IsMinion(m, true) ? float.MaxValue : m.Health);
 
                         if (result != null)
                         {
-                            _prevMinion = (Obj_AI_Minion) result;
+                            _prevMinion = (Obj_AI_Minion)result;
                         }
                     }
                 }
