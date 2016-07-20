@@ -152,7 +152,7 @@ namespace LeagueSharp.Common
         /// </param>
         public Menu(string displayName, string name, bool isRootMenu = false)
         {
-            this.DisplayName = displayName;
+            this.DisplayName = MenuGlobals.Function001(displayName);
             this.Name = name;
             this.IsRootMenu = isRootMenu;
             this.Style = FontStyle.Regular;

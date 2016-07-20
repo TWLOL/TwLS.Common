@@ -284,7 +284,7 @@ namespace LeagueSharp.Common
             set
             {
                 _width = value;
-                WidthSqr = value*value;
+                WidthSqr = value * value;
             }
         }
 
@@ -338,7 +338,7 @@ namespace LeagueSharp.Common
                     return ChargedMinRange +
                            Math.Min(
                                ChargedMaxRange - ChargedMinRange,
-                               (Utils.TickCount - _chargedCastedT)*(ChargedMaxRange - ChargedMinRange)/
+                               (Utils.TickCount - _chargedCastedT) * (ChargedMaxRange - ChargedMinRange) /
                                ChargeDuration - 150);
                 }
 
@@ -382,7 +382,7 @@ namespace LeagueSharp.Common
         /// <value>The range squared.</value>
         public float RangeSqr
         {
-            get { return Range*Range; }
+            get { return Range * Range; }
         }
 
         /// <summary>
@@ -493,7 +493,7 @@ namespace LeagueSharp.Common
             ChargedBuffName = buffName;
             ChargedMinRange = minRange;
             ChargedMaxRange = maxRange;
-            ChargeDuration = (int) (deltaT*1000);
+            ChargeDuration = (int)(deltaT * 1000);
             _chargedCastedT = 0;
 
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
@@ -610,7 +610,7 @@ namespace LeagueSharp.Common
                         RangeCheckFrom = RangeCheckFrom,
                         Aoe = aoe,
                         CollisionObjects =
-                            collisionable ?? new[] {CollisionableObjects.Heroes, CollisionableObjects.Minions}
+                            collisionable ?? new[] { CollisionableObjects.Heroes, CollisionableObjects.Minions }
                     });
         }
 
@@ -1044,7 +1044,7 @@ namespace LeagueSharp.Common
         /// <returns>System.Single.</returns>
         public float GetDamage(Obj_AI_Base target, int stage = 0)
         {
-            return (float) ObjectManager.Player.GetSpellDamage(target, Slot, stage);
+            return (float)ObjectManager.Player.GetSpellDamage(target, Slot, stage);
         }
 
         /// <summary>
@@ -1125,7 +1125,7 @@ namespace LeagueSharp.Common
                     }
                     break;
                 case SkillshotType.SkillshotCone:
-                    var edge1 = (castPosition.To2D() - From.To2D()).Rotated(-Width/2);
+                    var edge1 = (castPosition.To2D() - From.To2D()).Rotated(-Width / 2);
                     var edge2 = edge1.Rotated(Width);
                     var v = point.To2D() - From.To2D();
                     if (point.To2D().Distance(From, true) < RangeSqr && edge1.CrossProduct(v) > 0 &&
@@ -1180,7 +1180,7 @@ namespace LeagueSharp.Common
         /// <returns><c>true</c> if the specified location is in range of the spell; otherwise, <c>false</c>.</returns>
         public bool IsInRange(Vector2 point, float range = -1)
         {
-            return RangeCheckFrom.To2D().Distance(point, true) < (range < 0 ? RangeSqr : range*range);
+            return RangeCheckFrom.To2D().Distance(point, true) < (range < 0 ? RangeSqr : range * range);
         }
 
         /// <summary>
@@ -1244,7 +1244,7 @@ namespace LeagueSharp.Common
         /// Last time casting has been issued
         /// </summary>
         private int _cancelSpellIssue;
-        
+
 
         /// <summary>
         /// Spell setings
@@ -1364,8 +1364,8 @@ namespace LeagueSharp.Common
         private void OnOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
         {
             if (!sender.IsMe) return;
-            
-            if (!IsChanneling) return;  
+
+            if (!IsChanneling) return;
 
             if (args.Order == GameObjectOrder.MoveTo || args.Order == GameObjectOrder.AttackTo ||
                 args.Order == GameObjectOrder.AttackUnit || args.Order == GameObjectOrder.AutoAttack)
@@ -1382,7 +1382,7 @@ namespace LeagueSharp.Common
         {
 
             if (!CanBeCanceledByUser) return;
-            
+
             if (args.Msg == 517)
             {
                 IsChanneling = false;
