@@ -122,6 +122,181 @@ namespace LeagueSharp.Common
     public static class MinionManager
     {
         /// <summary>
+        /// All Minions
+        /// </summary>
+        public static List<Obj_AI_Minion> AllMinionsObj = new List<Obj_AI_Minion>();
+
+        /// <summary>
+        /// Enemy Minions List
+        /// </summary>
+        public static List<Obj_AI_Minion> MinionsListEnemy = new List<Obj_AI_Minion>();
+
+        /// <summary>
+        /// Ally Minions List
+        /// </summary>
+        public static List<Obj_AI_Minion> MinionsListAlly = new List<Obj_AI_Minion>();
+
+        /// <summary>
+        /// Neutral Minions List
+        /// </summary>
+        public static List<Obj_AI_Minion> MinionsListNeutral = new List<Obj_AI_Minion>();
+
+        /// <summary>
+        /// Turret List
+        /// </summary>
+        public static List<Obj_AI_Turret> TurretList = ObjectManager.Get<Obj_AI_Turret>().ToList();
+
+        /// <summary>
+        /// Nexus List
+        /// </summary>
+        public static List<Obj_HQ> NexusList = ObjectManager.Get<Obj_HQ>().ToList();
+
+        /// <summary>
+        /// Inhi List
+        /// </summary>
+        public static List<Obj_BarracksDampener> InhiList = ObjectManager.Get<Obj_BarracksDampener>().ToList();
+
+        /// <summary>
+        /// MinionManager
+        /// </summary>
+        static MinionManager()
+        {
+            foreach (var minion in ObjectManager.Get<Obj_AI_Minion>().Where(minion => minion.IsValid))
+            {
+                AddMinionObject(minion);
+                if (!minion.IsAlly)
+                    AllMinionsObj.Add(minion);
+            }
+
+            GameObject.OnCreate += Obj_AI_Base_OnCreate;
+            Game.OnUpdate += Game_OnUpdate;
+        }
+
+        /// <summary>
+        /// The Events
+        /// </summary>
+        /// <param name="args">The Args</param>
+        private static void Game_OnUpdate(EventArgs args)
+        {
+            MinionsListEnemy.RemoveAll(minion => !IsValidMinion(minion));
+            MinionsListNeutral.RemoveAll(minion => !IsValidMinion(minion));
+            MinionsListAlly.RemoveAll(minion => !IsValidMinion(minion));
+            AllMinionsObj.RemoveAll(minion => !IsValidMinion(minion));
+        }
+
+        /// <summary>
+        /// Create Minions Obj
+        /// </summary>
+        /// <param name="sender">The sender</param>
+        /// <param name="args">The Events</param>
+        private static void Obj_AI_Base_OnCreate(GameObject sender, EventArgs args)
+        {
+            var minion = sender as Obj_AI_Minion;
+            if (minion != null)
+            {
+                AddMinionObject(minion);
+                if (!minion.IsAlly)
+                    AllMinionsObj.Add(minion);
+            }
+        }
+
+        /// <summary>
+        /// Get The Minions Type Result
+        /// </summary>
+        /// <param name="minion">The Minion</param>
+        private static void AddMinionObject(Obj_AI_Minion minion)
+        {
+            if (minion.MaxHealth >= 225)
+            {
+                if (minion.Team == GameObjectTeam.Neutral)
+                {
+                    MinionsListNeutral.Add(minion);
+                }
+                else if (minion.MaxMana == 0 && minion.MaxHealth >= 300)
+                {
+                    if (minion.Team == GameObjectTeam.Unknown)
+                        return;
+                    else if (minion.Team != ObjectManager.Player.Team)
+                        MinionsListEnemy.Add(minion);
+                    else if (minion.Team == ObjectManager.Player.Team)
+                        MinionsListAlly.Add(minion);
+                }
+            }
+        }
+
+        /// <summary>
+        ///  New Get Minion Logic
+        /// </summary>
+        /// <param name="from">The Position</param>
+        /// <param name="range">The Range</param>
+        /// <param name="team">The Team</param>
+        /// <returns></returns>
+        public static List<Obj_AI_Minion> GetMinion(Vector3 from, float range = float.MaxValue, MinionTeam team = MinionTeam.Enemy)
+        {
+            if (team == MinionTeam.Enemy)
+            {
+
+                return MinionsListEnemy.FindAll(minion => CanReturn(minion, from, range));
+            }
+            else if (team == MinionTeam.Ally)
+            {
+
+                return MinionsListAlly.FindAll(minion => CanReturn(minion, from, range));
+            }
+            else if (team == MinionTeam.Neutral)
+            {
+
+                return MinionsListNeutral.Where(minion => CanReturn(minion, from, range)).OrderByDescending(minion => minion.MaxHealth).ToList();
+            }
+            else
+            {
+                return AllMinionsObj.FindAll(minion => CanReturn(minion, from, range));
+            }
+        }
+
+        /// <summary>
+        /// Search Minions
+        /// </summary>
+        /// <param name="minion">The Minion</param>
+        /// <returns></returns>
+        private static bool IsValidMinion(Obj_AI_Base minion)
+        {
+            if (minion == null || !minion.IsValid || minion.IsDead)
+                return false;
+            else
+                return true;
+        }
+
+        /// <summary>
+        /// Return Minions Result
+        /// </summary>
+        /// <param name="minion">The Minion</param>
+        /// <param name="from">The Position</param>
+        /// <param name="range">The Range</param>
+        /// <returns></returns>
+        private static bool CanReturn(Obj_AI_Base minion, Vector3 from, float range)
+        {
+            if (minion != null && minion.IsValid && !minion.IsDead && minion.IsVisible && minion.IsTargetable)
+            {
+                if (range == float.MaxValue)
+                    return true;
+                else if (range == 0)
+                {
+                    if (Orbwalking.InAutoAttackRange(minion))
+                        return true;
+                    else
+                        return false;
+                }
+                else if (Vector2.DistanceSquared((@from).To2D(), minion.Position.To2D()) < range * range)
+                    return true;
+                else
+                    return false;
+            }
+            else
+                return false;
+        }
+
+        /// <summary>
         /// Gets minions based on range, type, team and then orders them.
         /// </summary>
         /// <param name="from">The point to get the minions from.</param>
@@ -137,25 +312,25 @@ namespace LeagueSharp.Common
             MinionOrderTypes order = MinionOrderTypes.Health)
         {
             var result = (from minion in ObjectManager.Get<Obj_AI_Minion>()
-                where minion.IsValidTarget(range, false, @from)
-                let minionTeam = minion.Team
-                where
-                    team == MinionTeam.Neutral && minionTeam == GameObjectTeam.Neutral ||
-                    team == MinionTeam.Ally &&
-                    minionTeam ==
-                    (ObjectManager.Player.Team == GameObjectTeam.Chaos ? GameObjectTeam.Chaos : GameObjectTeam.Order) ||
-                    team == MinionTeam.Enemy &&
-                    minionTeam ==
-                    (ObjectManager.Player.Team == GameObjectTeam.Chaos ? GameObjectTeam.Order : GameObjectTeam.Chaos) ||
-                    team == MinionTeam.NotAlly && minionTeam != ObjectManager.Player.Team ||
-                    team == MinionTeam.NotAllyForEnemy &&
-                    (minionTeam == ObjectManager.Player.Team || minionTeam == GameObjectTeam.Neutral) ||
-                    team == MinionTeam.All
-                where
-                    minion.IsMelee() && type == MinionTypes.Melee || !minion.IsMelee() && type == MinionTypes.Ranged ||
-                    type == MinionTypes.All
-                where IsMinion(minion) || minionTeam == GameObjectTeam.Neutral && minion.MaxHealth > 5 && minion.IsHPBarRendered
-                select minion).Cast<Obj_AI_Base>().ToList();
+                          where minion.IsValidTarget(range, false, @from)
+                          let minionTeam = minion.Team
+                          where
+                              team == MinionTeam.Neutral && minionTeam == GameObjectTeam.Neutral ||
+                              team == MinionTeam.Ally &&
+                              minionTeam ==
+                              (ObjectManager.Player.Team == GameObjectTeam.Chaos ? GameObjectTeam.Chaos : GameObjectTeam.Order) ||
+                              team == MinionTeam.Enemy &&
+                              minionTeam ==
+                              (ObjectManager.Player.Team == GameObjectTeam.Chaos ? GameObjectTeam.Order : GameObjectTeam.Chaos) ||
+                              team == MinionTeam.NotAlly && minionTeam != ObjectManager.Player.Team ||
+                              team == MinionTeam.NotAllyForEnemy &&
+                              (minionTeam == ObjectManager.Player.Team || minionTeam == GameObjectTeam.Neutral) ||
+                              team == MinionTeam.All
+                          where
+                              minion.IsMelee() && type == MinionTypes.Melee || !minion.IsMelee() && type == MinionTypes.Ranged ||
+                              type == MinionTypes.All
+                          where IsMinion(minion) || minionTeam == GameObjectTeam.Neutral && minion.MaxHealth > 5 && minion.IsHPBarRendered
+                          select minion).Cast<Obj_AI_Base>().ToList();
 
             switch (order)
             {
@@ -207,7 +382,7 @@ namespace LeagueSharp.Common
         {
             return baseSkinName.Contains("ward");
         }
-        
+
         /// <summary>
         /// Determines whether the specified minion is a valid attackable ward.
         /// </summary>
@@ -354,23 +529,23 @@ namespace LeagueSharp.Common
             from = from.To2D().IsValid() ? from : ObjectManager.Player.ServerPosition;
 
             return (from minion in minions
-                select
-                    Prediction.GetPrediction(
-                        new PredictionInput
-                        {
-                            Unit = minion,
-                            Delay = delay,
-                            Radius = width,
-                            Speed = speed,
-                            From = @from,
-                            Range = range,
-                            Collision = collision,
-                            Type = stype,
-                            RangeCheckFrom = rangeCheckFrom
-                        })
+                    select
+                        Prediction.GetPrediction(
+                            new PredictionInput
+                            {
+                                Unit = minion,
+                                Delay = delay,
+                                Radius = width,
+                                Speed = speed,
+                                From = @from,
+                                Range = range,
+                                Collision = collision,
+                                Type = stype,
+                                RangeCheckFrom = rangeCheckFrom
+                            })
                 into pos
-                where pos.Hitchance >= HitChance.High
-                select pos.UnitPosition.To2D()).ToList();
+                    where pos.Hitchance >= HitChance.High
+                    select pos.UnitPosition.To2D()).ToList();
         }
 
         /*

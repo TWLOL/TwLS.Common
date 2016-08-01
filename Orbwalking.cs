@@ -1,4 +1,4 @@
-#region LICENSE
+﻿#region LICENSE
 
 /*
  Copyright 2014 - 2015 LeagueSharp
@@ -119,7 +119,7 @@ namespace LeagueSharp.Common
             "dariusnoxiantacticsonh", "fiorae", "garenq",
             "gravesmove", "hecarimrapidslash", "jaxempowertwo", "jaycehypercharge", "leonashieldofdaybreak", "luciane",
             "monkeykingdoubleattack", "mordekaisermaceofspades", "nasusq", "nautiluspiercinggaze", "netherblade",
-            "gangplankqwrapper", "powerfist", "renektonpreexecute", "rengarq",
+            "gangplankqwrapper", "powerfist", "renektonpreexecute", "rengarq", "aspectofthecougar",
             "shyvanadoubleattack", "sivirw", "takedown", "talonnoxiandiplomacy", "trundletrollsmash", "vaynetumble",
             "vie", "volibearq", "xenzhaocombotarget", "yorickspectral", "reksaiq", "itemtitanichydracleave", "masochism",
             "illaoiw", "elisespiderw", "fiorae", "meditate", "sejuaninorthernwinds", "asheq"
@@ -133,7 +133,7 @@ namespace LeagueSharp.Common
             "volleyattack", "volleyattackwithsound",
             "jarvanivcataclysmattack", "monkeykingdoubleattack", "shyvanadoubleattack", "shyvanadoubleattackdragon",
             "zyragraspingplantattack", "zyragraspingplantattack2", "zyragraspingplantattackfire",
-            "zyragraspingplantattack2fire", "viktorpowertransfer", "sivirwattackbounce", "asheqattacknoonhit",
+            "zyragraspingplantattack2fire", "viktorpowertransfer", "sivirwattackbounce",
             "elisespiderlingbasicattack", "heimertyellowbasicattack", "heimertyellowbasicattack2",
             "heimertbluebasicattack", "annietibbersbasicattack", "annietibbersbasicattack2",
             "yorickdecayedghoulbasicattack", "yorickravenousghoulbasicattack", "yorickspectralghoulbasicattack",
@@ -226,7 +226,10 @@ namespace LeagueSharp.Common
         ///     The random
         /// </summary>
         private static readonly Random _random = new Random(DateTime.Now.Millisecond);
-
+        public static List<Obj_AI_Minion> MinionListAA = new List<Obj_AI_Minion>();
+        private static int DelayOnFire = 0;
+        private static int DelayOnFireId = 0;
+        private static int BrainFarmInt = -100;
         private static int _autoattackCounter;
 
         /// <summary>
@@ -239,6 +242,7 @@ namespace LeagueSharp.Common
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpell;
             Obj_AI_Base.OnDoCast += Obj_AI_Base_OnDoCast;
             Spellbook.OnStopCast += SpellbookOnStopCast;
+            GameObject.OnDelete += GameObject_OnDelete;
 
             if (_championName == "Rengar")
             {
@@ -257,6 +261,27 @@ namespace LeagueSharp.Common
                         LastAATick = Utils.GameTimeTickCount - Game.Ping / 2 + t;
                     }
                 };
+            }
+        }
+
+        private static void GameObject_OnDelete(GameObject sender, EventArgs args)
+        {
+            var missile = sender as MissileClient;
+            if (DelayOnFire != 0 && missile != null && Player.AttackDelay > 1 / 2f)
+            {
+                if (missile.SpellCaster.IsMe && missile.SData.IsAutoAttack() && DelayOnFireId == missile.Target.NetworkId)
+                {
+                    var x = Utils.TickCount - DelayOnFire;
+
+                    if (x < 100 - Game.Ping / 2)
+                    {
+                        BrainFarmInt -= 2;
+                    }
+                    else if (x > 120 - Game.Ping / 2)
+                    {
+                        BrainFarmInt += 2;
+                    }
+                }
             }
         }
 
@@ -874,66 +899,50 @@ namespace LeagueSharp.Common
             public Orbwalker(Menu attachToMenu)
             {
                 _config = attachToMenu;
+
                 /* Drawings submenu */
                 var drawings = new Menu("Drawings", "drawings");
-                drawings.AddItem(
-                    new MenuItem("AACircle", "AACircle").SetShared()
-                        .SetValue(new Circle(true, Color.FromArgb(155, 255, 255, 0))));
-                drawings.AddItem(
-                    new MenuItem("AACircle2", "Enemy AA circle").SetShared()
-                        .SetValue(new Circle(false, Color.FromArgb(155, 255, 255, 0))));
-                drawings.AddItem(
-                    new MenuItem("HoldZone", "HoldZone").SetShared()
-                        .SetValue(new Circle(false, Color.FromArgb(155, 255, 255, 0))));
+                drawings.AddItem(new MenuItem("AACircle", "AACircle").SetShared().SetValue(new Circle(true, Color.FromArgb(155, 255, 255, 0))));
+                drawings.AddItem(new MenuItem("AACircle2", "Enemy AA circle").SetShared().SetValue(new Circle(false, Color.FromArgb(155, 255, 255, 0))));
+                drawings.AddItem(new MenuItem("HoldZone", "HoldZone").SetShared().SetValue(new Circle(false, Color.FromArgb(155, 255, 255, 0))));
                 drawings.AddItem(new MenuItem("AALineWidth", "Line Width")).SetShared().SetValue(new Slider(2, 1, 6));
                 drawings.AddItem(new MenuItem("LastHitHelper", "Last Hit Helper").SetShared().SetValue(false));
                 _config.AddSubMenu(drawings);
 
                 /* Misc options */
                 var misc = new Menu("Misc", "Misc");
-                misc.AddItem(
-                    new MenuItem("HoldPosRadius", "Hold Position Radius").SetShared().SetValue(new Slider(50, 50, 250)));
+                misc.AddItem(new MenuItem("HoldPosRadius", "Hold Position Radius").SetShared().SetValue(new Slider(0, 0, 250)));
                 misc.AddItem(new MenuItem("PriorizeFarm", "Priorize farm over harass").SetShared().SetValue(true));
                 misc.AddItem(new MenuItem("AttackWards", "Auto attack wards").SetShared().SetValue(false));
                 misc.AddItem(new MenuItem("AttackPetsnTraps", "Auto attack pets & traps").SetShared().SetValue(true));
-                misc.AddItem(new MenuItem("AttackGPBarrel", "Auto attack gangplank barrel").SetShared().SetValue(new StringList(new[] { "Combo and Farming", "Farming", "No" }, 1)));
+                misc.AddItem(new MenuItem("AttackGPBarrel", "Auto attack gangplank barrel").SetShared().SetValue(true));
                 misc.AddItem(new MenuItem("Smallminionsprio", "Jungle clear small first").SetShared().SetValue(false));
-                misc.AddItem(
-                    new MenuItem("LimitAttackSpeed", "Don't kite if Attack Speed > 2.5").SetShared().SetValue(false));
-                misc.AddItem(
-                    new MenuItem("FocusMinionsOverTurrets", "Focus minions over objectives").SetShared()
-                        .SetValue(new KeyBind('M', KeyBindType.Toggle)));
-
+                misc.AddItem(new MenuItem("LimitAttackSpeed", "Don't kite if Attack Speed > 2.5").SetShared().SetValue(false));
+                misc.AddItem(new MenuItem("FocusMinionsOverTurrets", "Focus minions over objectives").SetShared().SetValue(new KeyBind('M', KeyBindType.Toggle)));
                 _config.AddSubMenu(misc);
 
                 /* Missile check */
                 _config.AddItem(new MenuItem("MissileCheck", "Use Missile Check").SetShared().SetValue(true));
-
+                _config.AddItem(new MenuItem("Around", "走砍靈敏度提高").SetShared().SetValue(true)).ValueChanged += (obj, Args) => {
+                    if (!Args.GetNewValue<bool>())
+                        _config.Item("HoldPosRadius").SetShared().SetValue(new Slider(50, 50, 250));
+                    else if (Args.GetNewValue<bool>())
+                        _config.Item("HoldPosRadius").SetShared().SetValue(new Slider(0, 0, 250));
+                };
                 /* Delay sliders */
-                _config.AddItem(
-                    new MenuItem("ExtraWindup", "Extra windup time").SetShared().SetValue(new Slider(80, 0, 200)));
+                _config.AddItem(new MenuItem("autosetwinddd", "自動調整走砍延遲", true).SetValue(false));
+                new AutoSet(_config);
+                _config.AddItem(new MenuItem("ExtraWindup", "Extra windup time").SetShared().SetValue(new Slider(80, 0, 200)));
                 _config.AddItem(new MenuItem("FarmDelay", "Farm delay").SetShared().SetValue(new Slider(0, 0, 200)));
 
                 /*Load the menu*/
-                _config.AddItem(
-                    new MenuItem("LastHit", "Last hit").SetShared().SetValue(new KeyBind('X', KeyBindType.Press)));
-
+                _config.AddItem(new MenuItem("LastHit", "Last hit").SetShared().SetValue(new KeyBind('X', KeyBindType.Press)));
                 _config.AddItem(new MenuItem("Farm", "Mixed").SetShared().SetValue(new KeyBind('C', KeyBindType.Press)));
-
-                _config.AddItem(
-                    new MenuItem("Freeze", "Freeze").SetShared().SetValue(new KeyBind('N', KeyBindType.Press)));
-
-                _config.AddItem(
-                    new MenuItem("LaneClear", "LaneClear").SetShared().SetValue(new KeyBind('V', KeyBindType.Press)));
-
-                _config.AddItem(
-                    new MenuItem("Orbwalk", "Combo").SetShared().SetValue(new KeyBind(32, KeyBindType.Press)));
-
-                _config.AddItem(
-                    new MenuItem("StillCombo", "Combo without moving").SetShared()
-                        .SetValue(new KeyBind('N', KeyBindType.Press)));
-                _config.Item("StillCombo").ValueChanged +=
-                    (sender, args) => { Move = !args.GetNewValue<KeyBind>().Active; };
+                _config.AddItem(new MenuItem("Freeze", "Freeze").SetShared().SetValue(new KeyBind('N', KeyBindType.Press)));
+                _config.AddItem(new MenuItem("LaneClear", "LaneClear").SetShared().SetValue(new KeyBind('V', KeyBindType.Press)));
+                _config.AddItem(new MenuItem("Orbwalk", "Combo").SetShared().SetValue(new KeyBind(32, KeyBindType.Press)));
+                _config.AddItem(new MenuItem("StillCombo", "Combo without moving").SetShared().SetValue(new KeyBind('N', KeyBindType.Press)));
+                _config.Item("StillCombo").ValueChanged += (sender, args) => { Move = !args.GetNewValue<KeyBind>().Active; };
 
 
                 this.Player = ObjectManager.Player;
@@ -1048,10 +1057,10 @@ namespace LeagueSharp.Common
             public virtual void RegisterCustomMode(string name, string displayname, uint key)
             {
                 CustomModeName = name;
+
                 if (_config.Item(name) == null)
                 {
-                    _config.AddItem(
-                        new MenuItem(name, displayname).SetShared().SetValue(new KeyBind(key, KeyBindType.Press)));
+                    _config.AddItem(new MenuItem(name, displayname).SetShared().SetValue(new KeyBind(key, KeyBindType.Press)));
                 }
             }
 
@@ -1097,36 +1106,12 @@ namespace LeagueSharp.Common
             /// <returns><c>true</c> if the orbwalker should wait before attacking a minion, <c>false</c> otherwise.</returns>
             public bool ShouldWait()
             {
-                return
-                    ObjectManager.Get<Obj_AI_Minion>()
-                        .Any(
-                            minion =>
-                                minion.IsValidTarget() && minion.Team != GameObjectTeam.Neutral &&
-                                InAutoAttackRange(minion) && MinionManager.IsMinion(minion, false) &&
-                                HealthPrediction.LaneClearHealthPrediction(
-                                    minion, (int)(Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay) <=
-                                Player.GetAutoAttackDamage(minion));
+                return MinionListAA.Any(minion => HealthPrediction.LaneClearHealthPrediction(minion, (int)(Player.AttackDelay * 1000 * 1.2) + Game.Ping / 2 + 1000 * 500 / (int)GetMyProjectileSpeed(), FarmDelay) <= Player.GetAutoAttackDamage(minion));
             }
 
             private bool ShouldWaitUnderTurret(Obj_AI_Minion noneKillableMinion)
             {
-                return
-                    ObjectManager.Get<Obj_AI_Minion>()
-                        .Any(
-                            minion =>
-                                (noneKillableMinion != null ? noneKillableMinion.NetworkId != minion.NetworkId : true) &&
-                                minion.IsValidTarget() && minion.Team != GameObjectTeam.Neutral &&
-                                InAutoAttackRange(minion) && MinionManager.IsMinion(minion, false) &&
-                                HealthPrediction.LaneClearHealthPrediction(
-                                    minion,
-                                    (int)
-                                        (Player.AttackDelay * 1000 +
-                                         (Player.IsMelee
-                                             ? Player.AttackCastDelay * 1000
-                                             : Player.AttackCastDelay * 1000 +
-                                               1000 * (Player.AttackRange + 2 * Player.BoundingRadius) /
-                                               Player.BasicAttack.MissileSpeed)), FarmDelay) <=
-                                Player.GetAutoAttackDamage(minion));
+                return MinionListAA.Any(minion => (noneKillableMinion != null ? noneKillableMinion.NetworkId != minion.NetworkId : true) && HealthPrediction.LaneClearHealthPrediction(minion, (int)(Player.AttackDelay * 1000 + (Player.IsMelee ? Player.AttackCastDelay * 1000 : Player.AttackCastDelay * 1000 + 1000 * (Player.AttackRange + 2 * Player.BoundingRadius) / Player.BasicAttack.MissileSpeed)), FarmDelay) <= Player.GetAutoAttackDamage(minion));
             }
 
             /// <summary>
@@ -1136,178 +1121,117 @@ namespace LeagueSharp.Common
             public virtual AttackableUnit GetTarget()
             {
                 AttackableUnit result = null;
+
                 var mode = ActiveMode;
 
-                if ((mode == OrbwalkingMode.Mixed || mode == OrbwalkingMode.LaneClear) &&
-                    !_config.Item("PriorizeFarm").GetValue<bool>())
+                if ((mode == OrbwalkingMode.Mixed || mode == OrbwalkingMode.LaneClear) && !_config.Item("PriorizeFarm").GetValue<bool>())
                 {
                     var target = TargetSelector.GetTarget(-1, TargetSelector.DamageType.Physical);
+
                     if (target != null && InAutoAttackRange(target))
                     {
                         return target;
                     }
                 }
 
-                //GankPlank barrels
-                var attackGankPlankBarrels = _config.Item("AttackGPBarrel").GetValue<StringList>().SelectedIndex;
-                if (attackGankPlankBarrels != 2 && (attackGankPlankBarrels == 0 || (mode == OrbwalkingMode.LaneClear || mode == OrbwalkingMode.Mixed ||
-                        mode == OrbwalkingMode.LastHit || mode == OrbwalkingMode.Freeze)))
+                if (mode == OrbwalkingMode.LaneClear || mode == OrbwalkingMode.Mixed || mode == OrbwalkingMode.LastHit || mode == OrbwalkingMode.Freeze)
                 {
-                    var enemyGangPlank = HeroManager.Enemies.FirstOrDefault(e => e.ChampionName.Equals("gangplank", StringComparison.InvariantCultureIgnoreCase));
-
-                    if (enemyGangPlank != null)
+                    foreach (var minion in MinionManager.GetMinion(Player.Position, 0, MinionTeam.NotAlly).OrderBy(minion => HealthPrediction.GetHealthPrediction(minion, 1200)))
                     {
-                        var barrels = ObjectManager.Get<Obj_AI_Minion>()
-                            .Where(minion => minion.Team == GameObjectTeam.Neutral && minion.CharData.BaseSkinName == "gangplankbarrel" && minion.IsHPBarRendered && minion.IsValidTarget() && InAutoAttackRange(minion));
-
-                        foreach (var barrel in barrels)
+                        if (minion.Team != GameObjectTeam.Neutral)
                         {
-                            if (barrel.Health <= 1f)
-                            {
-                                return barrel;
-                            }
+                            if (!ShouldAttackMinion(minion))
+                                continue;
 
-                            var t = (int)(Player.AttackCastDelay * 1000) + Game.Ping / 2 +
-                                1000 * (int)Math.Max(0, Player.Distance(barrel) - Player.BoundingRadius) /
-                                (int)GetMyProjectileSpeed();
-
-                            var barrelBuff = barrel.Buffs.FirstOrDefault(
-                            b =>
-                                b.Name.Equals(
-                                    "gangplankebarrelactive", StringComparison.InvariantCultureIgnoreCase));
-
-                            if (barrelBuff != null && barrel.Health <= 2f)
-                            {
-                                var healthDecayRate = enemyGangPlank.Level >= 13 ? 0.5f : (enemyGangPlank.Level >= 7 ? 1f : 2f);
-                                var nextHealthDecayTime = Game.Time < barrelBuff.StartTime + healthDecayRate ? barrelBuff.StartTime + healthDecayRate : barrelBuff.StartTime + healthDecayRate * 2;
-
-                                if (nextHealthDecayTime <= Game.Time + t / 1000f)
-                                {
-                                    return barrel;
-                                }
-                            }
-                        }
-
-                        if (barrels.Any())
-                        {
-                            return null;
-                        }
-                    }
-                }
-
-                /*Killable Minion*/
-                if (mode == OrbwalkingMode.LaneClear || mode == OrbwalkingMode.Mixed || mode == OrbwalkingMode.LastHit ||
-                    mode == OrbwalkingMode.Freeze)
-                {
-                    var MinionList =
-                        ObjectManager.Get<Obj_AI_Minion>()
-                            .Where(minion => minion.IsValidTarget() && InAutoAttackRange(minion))
-                            .OrderByDescending(minion => minion.CharData.BaseSkinName.Contains("Siege"))
-                            .ThenBy(minion => minion.CharData.BaseSkinName.Contains("Super"))
-                            .ThenBy(minion => minion.Health)
-                            .ThenByDescending(minion => minion.MaxHealth);
-
-                    foreach (var minion in MinionList)
-                    {
-                        var t = (int)(Player.AttackCastDelay * 1000) - 100 + Game.Ping / 2 +
-                                1000 * (int)Math.Max(0, Player.Distance(minion) - Player.BoundingRadius) /
-                                (int)GetMyProjectileSpeed();
-
-                        if (mode == OrbwalkingMode.Freeze)
-                        {
-                            t += 200 + Game.Ping / 2;
-                        }
-
-                        var predHealth = HealthPrediction.GetHealthPrediction(minion, t, FarmDelay);
-
-                        if (minion.Team != GameObjectTeam.Neutral && ShouldAttackMinion(minion))
-                        {
-                            var damage = Player.GetAutoAttackDamage(minion, true);
-                            var killable = predHealth <= damage;
+                            var t = (int)(Player.AttackCastDelay * 1000) + BrainFarmInt + Game.Ping / 2 + 1000 * (int)Math.Max(0, Player.ServerPosition.Distance(minion.ServerPosition) - Player.BoundingRadius) / (int)GetMyProjectileSpeed();
 
                             if (mode == OrbwalkingMode.Freeze)
                             {
-                                if (minion.Health < 50 || predHealth <= 50)
+                                t += 200 + Game.Ping / 2;
+                            }
+
+                            if (mode == OrbwalkingMode.Freeze)
+                            {
+                                if (minion.Health < 50 || HealthPrediction.GetHealthPrediction(minion, t, FarmDelay) <= 50)
                                 {
                                     return minion;
                                 }
                             }
                             else
                             {
-                                if (predHealth <= 0)
+                                if (CanAttack())
                                 {
-                                    FireOnNonKillableMinion(minion);
+                                    DelayOnFire = t + Utils.TickCount;
+                                    DelayOnFireId = minion.NetworkId;
                                 }
 
-                                if (killable)
+                                if (HealthPrediction.GetHealthPrediction(minion, t, FarmDelay) <= 0)
+                                {
+                                    if (HealthPrediction.GetHealthPrediction(minion, t - 50, FarmDelay) > 0)
+                                    {
+                                        FireOnNonKillableMinion(minion);
+                                        return minion;
+                                    }
+                                }
+                                else if (HealthPrediction.GetHealthPrediction(minion, t, FarmDelay) <= Player.GetAutoAttackDamage(minion, true))
                                 {
                                     return minion;
                                 }
                             }
                         }
+                        else if (minion.Health < 2 && _config.Item("AttackBarrel").GetValue<bool>() && minion.CharData.BaseSkinName == "gangplankbarrel" && minion.IsHPBarRendered)
+                        {
+                            return minion;
+                        }
                     }
                 }
 
-                //Forced target
+                if (CanAttack())
+                {
+                    DelayOnFire = 0;
+                }
+
                 if (_forcedTarget.IsValidTarget() && InAutoAttackRange(_forcedTarget))
                 {
                     return _forcedTarget;
                 }
 
-                /* turrets / inhibitors / nexus */
-                if (mode == OrbwalkingMode.LaneClear &&
-                    (!_config.Item("FocusMinionsOverTurrets").GetValue<KeyBind>().Active ||
-                     !MinionManager.GetMinions(
-                         ObjectManager.Player.Position, GetRealAutoAttackRange(ObjectManager.Player)).Any()))
+                if (mode == OrbwalkingMode.LaneClear || mode == OrbwalkingMode.Mixed)
                 {
-                    /* turrets */
-                    foreach (var turret in
-                        ObjectManager.Get<Obj_AI_Turret>().Where(t => t.IsValidTarget() && InAutoAttackRange(t)))
+                    foreach (var turret in MinionManager.TurretList.Where(t => t.IsValidTarget() && InAutoAttackRange(t)))
                     {
                         return turret;
                     }
 
-                    /* inhibitor */
-                    foreach (var turret in
-                        ObjectManager.Get<Obj_BarracksDampener>().Where(t => t.IsValidTarget() && InAutoAttackRange(t)))
+                    foreach (var turret in MinionManager.InhiList.Where(t => t.IsValidTarget() && InAutoAttackRange(t)))
                     {
                         return turret;
                     }
 
-                    /* nexus */
-                    foreach (var nexus in
-                        ObjectManager.Get<Obj_HQ>().Where(t => t.IsValidTarget() && InAutoAttackRange(t)))
+                    foreach (var nexus in MinionManager.NexusList.Where(t => t.IsValidTarget() && InAutoAttackRange(t)))
                     {
                         return nexus;
                     }
                 }
 
-                /*Champions*/
                 if (mode != OrbwalkingMode.LastHit)
                 {
-                    if (mode != OrbwalkingMode.LaneClear || !ShouldWait())
+                    var target = TargetSelector.GetTarget(-1, TargetSelector.DamageType.Physical);
+
+                    if (target.IsValidTarget() && InAutoAttackRange(target))
                     {
-                        var target = TargetSelector.GetTarget(-1, TargetSelector.DamageType.Physical);
-                        if (target.IsValidTarget() && InAutoAttackRange(target))
+                        if (!ObjectManager.Player.UnderTurret(true) || mode == OrbwalkingMode.Combo)
                         {
                             return target;
                         }
                     }
                 }
 
-                /*Jungle minions*/
                 if (mode == OrbwalkingMode.LaneClear || mode == OrbwalkingMode.Mixed)
                 {
-                    var jminions =
-                        ObjectManager.Get<Obj_AI_Minion>()
-                            .Where(
-                                mob =>
-                                    mob.IsValidTarget() && mob.Team == GameObjectTeam.Neutral && InAutoAttackRange(mob) &&
-                                    mob.CharData.BaseSkinName != "gangplankbarrel" && mob.Name != "WardCorpse");
+                    var jminions = MinionManager.GetMinion(Player.Position, 0, MinionTeam.Neutral);
 
-                    result = _config.Item("Smallminionsprio").GetValue<bool>()
-                        ? jminions.MinOrDefault(mob => mob.MaxHealth)
-                        : jminions.MaxOrDefault(mob => mob.MaxHealth);
+                    result = _config.Item("Smallminionsprio").GetValue<bool>() ? jminions.MinOrDefault(mob => mob.MaxHealth) : jminions.MaxOrDefault(mob => mob.MaxHealth);
 
                     if (result != null)
                     {
@@ -1315,101 +1239,59 @@ namespace LeagueSharp.Common
                     }
                 }
 
-                /* UnderTurret Farming */
-                if (mode == OrbwalkingMode.LaneClear || mode == OrbwalkingMode.Mixed || mode == OrbwalkingMode.LastHit ||
-                    mode == OrbwalkingMode.Freeze)
+                if ((mode == OrbwalkingMode.LaneClear || mode == OrbwalkingMode.Mixed || mode == OrbwalkingMode.LastHit || mode == OrbwalkingMode.Freeze) && CanAttack())
                 {
-                    var closestTower =
-                        ObjectManager.Get<Obj_AI_Turret>()
-                            .MinOrDefault(t => t.IsAlly && !t.IsDead ? Player.Distance(t, true) : float.MaxValue);
+                    var closestTower = ObjectManager.Get<Obj_AI_Turret>().MinOrDefault(t => t.IsAlly && !t.IsDead ? Player.Distance(t, true) : float.MaxValue);
 
                     if (closestTower != null && Player.Distance(closestTower, true) < 1500 * 1500)
                     {
                         Obj_AI_Minion farmUnderTurretMinion = null;
                         Obj_AI_Minion noneKillableMinion = null;
-                        // return all the minions underturret in auto attack range
-                        var minions =
-                            MinionManager.GetMinions(Player.Position, Player.AttackRange + 200)
-                                .Where(
-                                    minion =>
-                                        InAutoAttackRange(minion) && closestTower.Distance(minion, true) < 900 * 900)
-                                .OrderByDescending(minion => minion.CharData.BaseSkinName.Contains("Siege"))
-                                .ThenBy(minion => minion.CharData.BaseSkinName.Contains("Super"))
-                                .ThenByDescending(minion => minion.MaxHealth)
-                                .ThenByDescending(minion => minion.Health);
+
+                        var minions = MinionListAA.Where(minion => closestTower.Distance(minion, true) < 900 * 900).OrderByDescending(minion => minion.CharData.BaseSkinName.Contains("Siege")).ThenBy(minion => minion.CharData.BaseSkinName.Contains("Super")).ThenByDescending(minion => minion.MaxHealth).ThenByDescending(minion => minion.Health);
+
                         if (minions.Any())
                         {
-                            // get the turret aggro minion
-                            var turretMinion =
-                                minions.FirstOrDefault(
-                                    minion =>
-                                        minion is Obj_AI_Minion &&
-                                        HealthPrediction.HasTurretAggro(minion as Obj_AI_Minion));
+                            var turretMinion = minions.FirstOrDefault(minion => minion is Obj_AI_Minion && HealthPrediction.HasTurretAggro(minion as Obj_AI_Minion));
 
                             if (turretMinion != null)
                             {
                                 var hpLeftBeforeDie = 0;
                                 var hpLeft = 0;
                                 var turretAttackCount = 0;
-                                var turretStarTick = HealthPrediction.TurretAggroStartTick(
-                                    turretMinion as Obj_AI_Minion);
-                                // from healthprediction (don't blame me :S)
-                                var turretLandTick = turretStarTick + (int)(closestTower.AttackCastDelay * 1000) +
-                                                     1000 *
-                                                     Math.Max(
-                                                         0,
-                                                         (int)
-                                                             (turretMinion.Distance(closestTower) -
-                                                              closestTower.BoundingRadius)) /
-                                                     (int)(closestTower.BasicAttack.MissileSpeed + 70);
-                                // calculate the HP before try to balance it
-                                for (float i = turretLandTick + 50;
-                                    i < turretLandTick + 10 * closestTower.AttackDelay * 1000 + 50;
-                                    i = i + closestTower.AttackDelay * 1000)
+                                var turretStarTick = HealthPrediction.TurretAggroStartTick(turretMinion as Obj_AI_Minion);
+                                var turretLandTick = turretStarTick + (int)(closestTower.AttackCastDelay * 1000) + 1000 * Math.Max(0, (int)(turretMinion.Distance(closestTower) - closestTower.BoundingRadius)) / (int)(closestTower.BasicAttack.MissileSpeed + 70);
+
+                                for (float i = turretLandTick + 50; i < turretLandTick + 10 * closestTower.AttackDelay * 1000 + 50; i = i + closestTower.AttackDelay * 1000)
                                 {
                                     var time = (int)i - Utils.GameTimeTickCount + Game.Ping / 2;
-                                    var predHP =
-                                        (int)
-                                            HealthPrediction.LaneClearHealthPrediction(
-                                                turretMinion, time > 0 ? time : 0);
+                                    var predHP = (int)HealthPrediction.LaneClearHealthPrediction(turretMinion, time > 0 ? time : 0);
+
                                     if (predHP > 0)
                                     {
                                         hpLeft = predHP;
                                         turretAttackCount += 1;
                                         continue;
                                     }
+
                                     hpLeftBeforeDie = hpLeft;
                                     hpLeft = 0;
                                     break;
                                 }
-                                // calculate the hits is needed and possibilty to balance
+
                                 if (hpLeft == 0 && turretAttackCount != 0 && hpLeftBeforeDie != 0)
                                 {
                                     var damage = (int)Player.GetAutoAttackDamage(turretMinion, true);
                                     var hits = hpLeftBeforeDie / damage;
-                                    var timeBeforeDie = turretLandTick +
-                                                        (turretAttackCount + 1) *
-                                                        (int)(closestTower.AttackDelay * 1000) -
-                                                        Utils.GameTimeTickCount;
-                                    var timeUntilAttackReady = LastAATick + (int)(Player.AttackDelay * 1000) >
-                                                               Utils.GameTimeTickCount + Game.Ping / 2 + 25
-                                        ? LastAATick + (int)(Player.AttackDelay * 1000) -
-                                          (Utils.GameTimeTickCount + Game.Ping / 2 + 25)
-                                        : 0;
-                                    var timeToLandAttack = Player.IsMelee
-                                        ? Player.AttackCastDelay * 1000
-                                        : Player.AttackCastDelay * 1000 +
-                                          1000 * Math.Max(0, turretMinion.Distance(Player) - Player.BoundingRadius) /
-                                          Player.BasicAttack.MissileSpeed;
-                                    if (hits >= 1 &&
-                                        hits * Player.AttackDelay * 1000 + timeUntilAttackReady + timeToLandAttack <
-                                        timeBeforeDie)
+                                    var timeBeforeDie = turretLandTick + (turretAttackCount + 1) * (int)(closestTower.AttackDelay * 1000) - Utils.GameTimeTickCount;
+                                    var timeUntilAttackReady = LastAATick + (int)(Player.AttackDelay * 1000) > Utils.GameTimeTickCount + Game.Ping / 2 + 25 ? LastAATick + (int)(Player.AttackDelay * 1000) - (Utils.GameTimeTickCount + Game.Ping / 2 + 25) : 0;
+                                    var timeToLandAttack = Player.IsMelee ? Player.AttackCastDelay * 1000 : Player.AttackCastDelay * 1000 + 1000 * Math.Max(0, turretMinion.Distance(Player) - Player.BoundingRadius) / Player.BasicAttack.MissileSpeed;
+
+                                    if (hits >= 1 && hits * Player.AttackDelay * 1000 + timeUntilAttackReady + timeToLandAttack < timeBeforeDie)
                                     {
                                         farmUnderTurretMinion = turretMinion as Obj_AI_Minion;
                                     }
-                                    else if (hits >= 1 &&
-                                             hits * Player.AttackDelay * 1000 + timeUntilAttackReady + timeToLandAttack >
-                                             timeBeforeDie)
+                                    else if (hits >= 1 && hits * Player.AttackDelay * 1000 + timeUntilAttackReady + timeToLandAttack > timeBeforeDie)
                                     {
                                         noneKillableMinion = turretMinion as Obj_AI_Minion;
                                     }
@@ -1418,42 +1300,38 @@ namespace LeagueSharp.Common
                                 {
                                     noneKillableMinion = turretMinion as Obj_AI_Minion;
                                 }
-                                // should wait before attacking a minion.
+
                                 if (ShouldWaitUnderTurret(noneKillableMinion))
                                 {
                                     return null;
                                 }
+
                                 if (farmUnderTurretMinion != null)
                                 {
                                     return farmUnderTurretMinion;
                                 }
-                                // balance other minions
-                                foreach (var minion in
-                                    minions.Where(
-                                        x =>
-                                            x.NetworkId != turretMinion.NetworkId && x is Obj_AI_Minion &&
-                                            !HealthPrediction.HasMinionAggro(x as Obj_AI_Minion)))
+
+                                foreach (var minion in minions.Where(x => x.NetworkId != turretMinion.NetworkId && x is Obj_AI_Minion && !HealthPrediction.HasMinionAggro(x as Obj_AI_Minion)))
                                 {
                                     var playerDamage = (int)Player.GetAutoAttackDamage(minion);
                                     var turretDamage = (int)closestTower.GetAutoAttackDamage(minion, true);
                                     var leftHP = (int)minion.Health % turretDamage;
+
                                     if (leftHP > playerDamage)
                                     {
                                         return minion;
                                     }
                                 }
-                                // late game
-                                var lastminion =
-                                    minions.LastOrDefault(x => x.NetworkId != turretMinion.NetworkId && x is Obj_AI_Minion &&
-                                            !HealthPrediction.HasMinionAggro(x as Obj_AI_Minion));
+
+                                var lastminion = minions.LastOrDefault(x => x.NetworkId != turretMinion.NetworkId && x is Obj_AI_Minion && !HealthPrediction.HasMinionAggro(x as Obj_AI_Minion));
+
                                 if (lastminion != null && minions.Count() >= 2)
                                 {
-                                    if (1f / Player.AttackDelay >= 1f &&
-                                        (int)(turretAttackCount * closestTower.AttackDelay / Player.AttackDelay) *
-                                        Player.GetAutoAttackDamage(lastminion) > lastminion.Health)
+                                    if (1f / Player.AttackDelay >= 1f && (int)(turretAttackCount * closestTower.AttackDelay / Player.AttackDelay) * Player.GetAutoAttackDamage(lastminion) > lastminion.Health)
                                     {
                                         return lastminion;
                                     }
+
                                     if (minions.Count() >= 5 && 1f / Player.AttackDelay >= 1.2)
                                     {
                                         return lastminion;
@@ -1466,27 +1344,24 @@ namespace LeagueSharp.Common
                                 {
                                     return null;
                                 }
-                                // balance other minions
-                                foreach (var minion in
-                                    minions.Where(
-                                        x => x is Obj_AI_Minion && !HealthPrediction.HasMinionAggro(x as Obj_AI_Minion))
-                                    )
+
+                                foreach (var minion in minions.Where(x => x is Obj_AI_Minion && !HealthPrediction.HasMinionAggro(x as Obj_AI_Minion)))
                                 {
                                     if (closestTower != null)
                                     {
                                         var playerDamage = (int)Player.GetAutoAttackDamage(minion);
                                         var turretDamage = (int)closestTower.GetAutoAttackDamage(minion, true);
                                         var leftHP = (int)minion.Health % turretDamage;
+
                                         if (leftHP > playerDamage)
                                         {
                                             return minion;
                                         }
                                     }
                                 }
-                                //late game
-                                var lastminion =
-                                    minions
-                                        .LastOrDefault(x => x is Obj_AI_Minion && !HealthPrediction.HasMinionAggro(x as Obj_AI_Minion));
+
+                                var lastminion = minions.LastOrDefault(x => x is Obj_AI_Minion && !HealthPrediction.HasMinionAggro(x as Obj_AI_Minion));
+
                                 if (lastminion != null && minions.Count() >= 2)
                                 {
                                     if (minions.Count() >= 5 && 1f / Player.AttackDelay >= 1.2)
@@ -1500,35 +1375,24 @@ namespace LeagueSharp.Common
                     }
                 }
 
-                /*Lane Clear minions*/
                 if (mode == OrbwalkingMode.LaneClear)
                 {
                     if (!ShouldWait())
                     {
                         if (_prevMinion.IsValidTarget() && InAutoAttackRange(_prevMinion))
                         {
-                            var predHealth = HealthPrediction.LaneClearHealthPrediction(
-                                _prevMinion, (int)(Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay);
-                            if (predHealth >= 2 * Player.GetAutoAttackDamage(_prevMinion) ||
-                                Math.Abs(predHealth - _prevMinion.Health) < float.Epsilon)
+                            var predHealth = HealthPrediction.LaneClearHealthPrediction(_prevMinion, (int)(Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay);
+
+                            if (predHealth >= 2 * Player.GetAutoAttackDamage(_prevMinion) || Math.Abs(predHealth - _prevMinion.Health) < float.Epsilon)
                             {
                                 return _prevMinion;
                             }
                         }
 
-                        result = (from minion in
-                            ObjectManager.Get<Obj_AI_Minion>()
-                                .Where(
-                                    minion =>
-                                        minion.IsValidTarget() && InAutoAttackRange(minion) && ShouldAttackMinion(minion))
-                                  let predHealth =
-                                      HealthPrediction.LaneClearHealthPrediction(
-                                          minion, (int)(Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay)
-                                  where
-                                      predHealth >= 2 * Player.GetAutoAttackDamage(minion) ||
-                                      Math.Abs(predHealth - minion.Health) < float.Epsilon
-                                  select minion).MaxOrDefault(
-                                m => !MinionManager.IsMinion(m, true) ? float.MaxValue : m.Health);
+                        result = (from minion in MinionListAA.Where(minion => ShouldAttackMinion(minion, false))
+                                  let predHealth = HealthPrediction.LaneClearHealthPrediction(minion, (int)(Player.AttackDelay * 1000 * LaneClearWaitTimeMod), FarmDelay)
+                                  where predHealth >= 2 * Player.GetAutoAttackDamage(minion) || Math.Abs(predHealth - minion.Health) < float.Epsilon
+                                  select minion).MaxOrDefault(m => MinionManager.IsMinion(m, true) ? m.Health : float.MaxValue);
 
                         if (result != null)
                         {
@@ -1546,20 +1410,26 @@ namespace LeagueSharp.Common
             /// <param name="minion">The <see cref="Obj_AI_Minion" /></param>
             /// <param name="includeBarrel">Include Gangplank Barrel</param>
             /// <returns><c>true</c> if the minion should be attacked; otherwise, <c>false</c>.</returns>
-            private bool ShouldAttackMinion(Obj_AI_Minion minion)
+            private bool ShouldAttackMinion(Obj_AI_Minion minion, bool includeBarrel = false)
             {
                 if (minion.Name == "WardCorpse" || minion.CharData.BaseSkinName == "jarvanivstandard")
                 {
                     return false;
                 }
 
-                if (MinionManager.IsWard(minion))
+                if (minion.Team == GameObjectTeam.Neutral && includeBarrel)
+                {
+                    return _config.Item("AttackBarrel").GetValue<bool>() && minion.CharData.BaseSkinName == "gangplankbarrel" && minion.IsHPBarRendered;
+                }
+
+                var minion2 = minion as Obj_AI_Minion;
+
+                if (MinionManager.IsWard(minion2))
                 {
                     return _config.Item("AttackWards").IsActive();
                 }
 
-                return (_config.Item("AttackPetsnTraps").GetValue<bool>() || MinionManager.IsMinion(minion)) &&
-                       minion.CharData.BaseSkinName != "gangplankbarrel";
+                return (_config.Item("AttackPetsnTraps").GetValue<bool>() || MinionManager.IsMinion(minion)) && minion.CharData.BaseSkinName != "gangplankbarrel";
             }
 
             /// <summary>
@@ -1575,17 +1445,15 @@ namespace LeagueSharp.Common
                         return;
                     }
 
-                    //Prevent canceling important spells
                     if (Player.IsCastingInterruptableSpell(true))
                     {
                         return;
                     }
 
+                    MinionListAA = MinionManager.GetMinion(Player.Position, 0);
+
                     var target = GetTarget();
-                    Orbwalk(
-                        target, _orbwalkingPoint.To2D().IsValid() ? _orbwalkingPoint : Game.CursorPos,
-                        _config.Item("ExtraWindup").GetValue<Slider>().Value,
-                        Math.Max(_config.Item("HoldPosRadius").GetValue<Slider>().Value, 30));
+                    Orbwalk(target, _orbwalkingPoint.To2D().IsValid() ? _orbwalkingPoint : Game.CursorPos, _config.Item("ExtraWindup").GetValue<Slider>().Value, Math.Max(_config.Item("HoldPosRadius").GetValue<Slider>().Value, 30));
                 }
                 catch (Exception e)
                 {
@@ -1601,38 +1469,25 @@ namespace LeagueSharp.Common
             {
                 if (_config.Item("AACircle").GetValue<Circle>().Active)
                 {
-                    Render.Circle.DrawCircle(
-                        Player.Position, GetRealAutoAttackRange(null) + 65,
-                        _config.Item("AACircle").GetValue<Circle>().Color,
-                        _config.Item("AALineWidth").GetValue<Slider>().Value);
+                    Render.Circle.DrawCircle(Player.Position, GetRealAutoAttackRange(null) + 65, _config.Item("AACircle").GetValue<Circle>().Color, _config.Item("AALineWidth").GetValue<Slider>().Value);
                 }
+
                 if (_config.Item("AACircle2").GetValue<Circle>().Active)
                 {
-                    foreach (var target in
-                        HeroManager.Enemies.FindAll(target => target.IsValidTarget(1175)))
+                    foreach (var target in HeroManager.Enemies.FindAll(target => target.IsValidTarget(1175)))
                     {
-                        Render.Circle.DrawCircle(
-                            target.Position, GetAttackRange(target), _config.Item("AACircle2").GetValue<Circle>().Color,
-                            _config.Item("AALineWidth").GetValue<Slider>().Value);
+                        Render.Circle.DrawCircle(target.Position, GetAttackRange(target), _config.Item("AACircle2").GetValue<Circle>().Color, _config.Item("AALineWidth").GetValue<Slider>().Value);
                     }
                 }
 
                 if (_config.Item("HoldZone").GetValue<Circle>().Active)
                 {
-                    Render.Circle.DrawCircle(
-                        Player.Position, _config.Item("HoldPosRadius").GetValue<Slider>().Value,
-                        _config.Item("HoldZone").GetValue<Circle>().Color,
-                        _config.Item("AALineWidth").GetValue<Slider>().Value, true);
+                    Render.Circle.DrawCircle(Player.Position, _config.Item("HoldPosRadius").GetValue<Slider>().Value, _config.Item("HoldZone").GetValue<Circle>().Color, _config.Item("AALineWidth").GetValue<Slider>().Value, true);
                 }
-                _config.Item("FocusMinionsOverTurrets")
-                    .Permashow(_config.Item("FocusMinionsOverTurrets").GetValue<KeyBind>().Active);
 
                 if (_config.Item("LastHitHelper").GetValue<bool>())
                 {
-                    foreach (var minion in
-                        ObjectManager.Get<Obj_AI_Minion>()
-                            .Where(
-                                x => x.Name.ToLower().Contains("minion") && x.IsHPBarRendered && x.IsValidTarget(1000)))
+                    foreach (var minion in ObjectManager.Get<Obj_AI_Minion>().Where(x => x.Name.ToLower().Contains("minion") && x.IsHPBarRendered && x.IsValidTarget(1000)))
                     {
                         if (minion.Health < ObjectManager.Player.GetAutoAttackDamage(minion, true))
                         {

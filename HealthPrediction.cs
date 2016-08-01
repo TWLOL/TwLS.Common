@@ -22,6 +22,7 @@
 
 #region
 
+using SharpDX;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -121,7 +122,7 @@ namespace LeagueSharp.Common
         /// <param name="args">The <see cref="GameObjectProcessSpellCastEventArgs"/> instance containing the event data.</param>
         private static void ObjAiBaseOnOnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (!sender.IsValidTarget(3000, false) || sender.Team != ObjectManager.Player.Team || sender is Obj_AI_Hero
+            if (!sender.IsValidTarget(3000, false) || sender.Team != ObjectManager.Player.Team
                 || !Orbwalking.IsAutoAttack(args.SData.Name) || !(args.Target is Obj_AI_Base))
             {
                 return;
@@ -133,10 +134,11 @@ namespace LeagueSharp.Common
             var attackData = new PredictedDamage(
                 sender,
                 target,
+                sender.ServerPosition,
                 Utils.GameTimeTickCount - Game.Ping / 2,
                 sender.AttackCastDelay * 1000,
                 sender.AttackDelay * 1000 - (sender is Obj_AI_Turret ? 70 : 0),
-                sender.IsMelee() ? int.MaxValue : (int)args.SData.MissileSpeed,
+                sender.IsMelee ? int.MaxValue : (int)args.SData.MissileSpeed,
                 (float)sender.GetAutoAttackDamage(target, true));
             ActiveAttacks.Add(sender.NetworkId, attackData);
         }
@@ -158,10 +160,17 @@ namespace LeagueSharp.Common
                 if (!attack.Processed && attack.Source.IsValidTarget(float.MaxValue, false) &&
                     attack.Target.IsValidTarget(float.MaxValue, false) && attack.Target.NetworkId == unit.NetworkId)
                 {
-                    var landTime = attack.StartTick + attack.Delay +
-                                   1000 * Math.Max(0, unit.Distance(attack.Source) - attack.Source.BoundingRadius) / attack.ProjectileSpeed + delay;
+                    float bonding = Math.Max(attack.Target.BoundingRadius, unit.Distance(attack.StartPos) - attack.Source.BoundingRadius);
 
-                    if (/*Utils.GameTimeTickCount < landTime - delay &&*/ landTime < Utils.GameTimeTickCount + time)
+                    if (attack.Source.IsMelee)
+                    {
+                        bonding = 0;
+                    }
+
+
+                    var landTime = attack.StartTick + attack.Delay + 1000 * bonding / attack.ProjectileSpeed + delay;
+
+                    if (landTime < Utils.GameTimeTickCount + time)
                     {
                         attackDamage = attack.Damage;
                     }
@@ -197,11 +206,11 @@ namespace LeagueSharp.Common
                     while (fromT < toT)
                     {
                         if (fromT >= Utils.GameTimeTickCount &&
-                            (fromT + attack.Delay +  Math.Max(0, unit.Distance(attack.Source) - attack.Source.BoundingRadius) / attack.ProjectileSpeed < toT))
+                            (fromT + attack.Delay + Math.Max(0, unit.Distance(attack.Source) - attack.Source.BoundingRadius) / attack.ProjectileSpeed < toT))
                         {
                             n++;
                         }
-                        fromT += (int) attack.AnimationTime;
+                        fromT += (int)attack.AnimationTime;
                     }
                 }
                 predictedDamage += n * attack.Damage;
@@ -298,6 +307,15 @@ namespace LeagueSharp.Common
             /// <value>
             /// The start tick.
             /// </value>
+            /// 
+            public Vector3 StartPos { get; private set; }
+
+            /// <summary>
+            /// Gets or sets the start tick.
+            /// </summary>
+            /// <value>
+            /// The start tick.
+            /// </value>
             public int StartTick { get; internal set; }
 
             /// <summary>
@@ -328,6 +346,7 @@ namespace LeagueSharp.Common
             /// <param name="damage">The damage.</param>
             public PredictedDamage(Obj_AI_Base source,
                 Obj_AI_Base target,
+                Vector3 starPos,
                 int startTick,
                 float delay,
                 float animationTime,
@@ -335,6 +354,7 @@ namespace LeagueSharp.Common
                 float damage)
             {
                 Source = source;
+                StartPos = starPos;
                 Target = target;
                 StartTick = startTick;
                 Delay = delay;
