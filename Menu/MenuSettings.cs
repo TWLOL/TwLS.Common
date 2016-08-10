@@ -1,9 +1,13 @@
 ﻿namespace LeagueSharp.Common
 {
-    using System.IO;
-
+    using Properties;
     using SharpDX;
-
+    using SharpDX.Text;
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Security.Cryptography;
+    using System.Web.Script.Serialization;
     using Color = System.Drawing.Color;
 
     /// <summary>
@@ -84,7 +88,7 @@
         {
             get
             {
-                return 160;
+                return 250;
             }
         }
 
@@ -127,5 +131,72 @@
         }
 
         #endregion
+    }
+
+    public static class MultiLanguages
+    {
+        /// <summary>
+        /// The translations
+        /// </summary>
+        private static Dictionary<string, string> Translations = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Initializes static members of the <see cref="MultiLanguage"/> class.
+        /// </summary>
+        static MultiLanguages()
+        {
+            LoadLanguage(Config.SelectedLanguage);
+        }
+
+        /// <summary>
+        /// Translates the text into the loaded language.
+        /// </summary>
+        /// <param name="textToTranslate">The text to translate.</param>
+        /// <returns>System.String.</returns>
+        public static string _(string textToTranslate)
+        {
+            var textToTranslateToLower = textToTranslate.ToLower();
+            return Translations.ContainsKey(textToTranslateToLower) ? Translations[textToTranslateToLower] : textToTranslate;
+        }
+
+        /// <summary>
+        /// Loads the language.
+        /// </summary>
+        /// <param name="languageName">Name of the language.</param>
+        /// <returns><c>true</c> if the operation succeeded, <c>false</c> otherwise false.</returns>
+        public static bool LoadLanguage(string languageName)
+        {
+            try
+            {
+                var languageStrings = new System.Resources.ResourceManager("LeagueSharp.Common.Properties.Resources", typeof(Resources).Assembly).GetString("ChineseJson");
+
+                if (string.IsNullOrEmpty(languageStrings))
+                {
+                    return false;
+                }
+
+                languageStrings = DesDecrypt(languageStrings);
+
+                Translations = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(languageStrings); return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return false;
+            }
+        }
+
+        private static string DesDecrypt(string decryptString)
+        {
+            byte[] keyBytes = Encoding.UTF8.GetBytes("1076751236".Substring(0, 8));
+            byte[] keyIV = keyBytes;
+            byte[] inputByteArray = Convert.FromBase64String(decryptString);
+            DESCryptoServiceProvider provider = new DESCryptoServiceProvider();
+            MemoryStream mStream = new MemoryStream();
+            CryptoStream cStream = new CryptoStream(mStream, provider.CreateDecryptor(keyBytes, keyIV), CryptoStreamMode.Write);
+            cStream.Write(inputByteArray, 0, inputByteArray.Length);
+            cStream.FlushFinalBlock();
+            return Encoding.UTF8.GetString(mStream.ToArray());
+        }
     }
 }

@@ -1,4 +1,4 @@
-namespace LeagueSharp.Common
+﻿namespace LeagueSharp.Common
 {
     using System;
     using System.Collections.Generic;
@@ -992,7 +992,7 @@ namespace LeagueSharp.Common
                     if (cursorPos.X > this.Position.X + this.Width - this.Height)
                     {
                         var c = this.GetValue<System.Drawing.Color>();
-                        ColorPicker.Load(delegate (System.Drawing.Color args) { this.SetValue(args); }, c);
+                        ColorPicker.Load(delegate(System.Drawing.Color args) { this.SetValue(args); }, c);
                     }
 
                     break;
@@ -1027,12 +1027,12 @@ namespace LeagueSharp.Common
                     {
                         var c = this.GetValue<Circle>();
                         ColorPicker.Load(
-                            delegate (System.Drawing.Color args)
-                            {
-                                var val = this.GetValue<Circle>();
-                                val.Color = args;
-                                this.SetValue(val);
-                            },
+                            delegate(System.Drawing.Color args)
+                                {
+                                    var val = this.GetValue<Circle>();
+                                    val.Color = args;
+                                    this.SetValue(val);
+                                },
                             c.Color);
                     }
 

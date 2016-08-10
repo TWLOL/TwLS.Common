@@ -1,4 +1,4 @@
-namespace LeagueSharp.Common
+﻿namespace LeagueSharp.Common
 {
     using System;
     using System.Collections.Generic;
@@ -11,14 +11,9 @@ namespace LeagueSharp.Common
 
     using Color = SharpDX.Color;
     using Rectangle = SharpDX.Rectangle;
-    using Properties;
-    using System.Web.Script.Serialization;
-    using SharpDX.Text;
-    using System.Security.Cryptography;
-    using System.IO;
 
     /// <summary>
-    ///     The menu
+    ///     The menu.
     /// </summary>
     public class Menu
     {
@@ -115,7 +110,8 @@ namespace LeagueSharp.Common
         /// </summary>
         static Menu()
         {
-            Root.AddItem(new MenuItem("BackgroundAlpha", "Background Opacity")).SetValue(new Slider(165, 55, 255));
+            Root.AddItem(new MenuItem("BackgroundAlpha", "Background Opacity")).SetValue(new Slider(50, 50, 255));
+            Root.AddItem(new MenuItem("ALPHAS", "菜单完全透明化")).SetValue(false).ValueChanged += Menu_ValueChanged; ;
             Root.AddItem(
                 new MenuItem("FontName", "Font Name:").SetValue(
                     new StringList(new[] { "Tahoma", "Calibri", "Segoe UI" }, 1)));
@@ -136,6 +132,18 @@ namespace LeagueSharp.Common
                 new MenuItem("FontInfo", "Press F5 after your change").SetFontStyle(FontStyle.Bold, Color.Yellow));
 
             CommonMenu.Instance.AddSubMenu(Root);
+        }
+
+        private static void Menu_ValueChanged(object sender, OnValueChangeEventArgs Args)
+        {
+            if (Args.GetNewValue<bool>())
+            {
+                Root.Item("BackgroundAlpha").SetValue(new Slider(0, 0, 255));
+            }
+            else
+            {
+                Root.Item("BackgroundAlpha").SetValue(new Slider(50, 50, 255));
+            }
         }
 
         /// <summary>
@@ -261,7 +269,7 @@ namespace LeagueSharp.Common
                 {
                     return MenuSettings.BasePosition + this.MenuCount * new Vector2(0, MenuSettings.MenuItemHeight);
                 }
-
+   
 
                 return this.Parent.MyBasePosition;
             }
@@ -289,7 +297,7 @@ namespace LeagueSharp.Common
                        + new Vector2(
                              (this.Parent != null)
                                  ? this.Parent.Position.X + this.Parent.Width
-                                 : (int)this.MyBasePosition.X, 0)
+                                 : (int)this.MyBasePosition.X, 0) 
                                  + this.YLevel * new Vector2(0, MenuSettings.MenuItemHeight);
             }
         }
@@ -855,73 +863,5 @@ namespace LeagueSharp.Common
         }
 
         #endregion
-    }
-
-    public static class MultiLanguages
-    {
-        /// <summary>
-        /// The translations
-        /// </summary>
-        private static Dictionary<string, string> Translations = new Dictionary<string, string>();
-
-        /// <summary>
-        /// Initializes static members of the <see cref="MultiLanguages"/> class.
-        /// </summary>
-        static MultiLanguages()
-        {
-            LoadLanguage(Config.SelectedLanguage);
-        }
-
-        /// <summary>
-        /// Translates the text into the loaded language.
-        /// </summary>
-        /// <param name="textToTranslate">The text to translate.</param>
-        /// <returns>System.String.</returns>
-        public static string _(string textToTranslate)
-        {
-            var textToTranslateToLower = textToTranslate.ToLower();
-            return Translations.ContainsKey(textToTranslateToLower) ? Translations[textToTranslateToLower] : textToTranslate;
-        }
-
-        /// <summary>
-        /// Loads the language.
-        /// </summary>
-        /// <param name="languageName">Name of the language.</param>
-        /// <returns><c>true</c> if the operation succeeded, <c>false</c> otherwise false.</returns>
-        public static bool LoadLanguage(string languageName)
-        {
-            try
-            {
-                var languageStrings = new System.Resources.ResourceManager("LeagueSharp.Common.Properties.Resources", typeof(Resources).Assembly).GetString("ChineseJson");
-
-                if (String.IsNullOrEmpty(languageStrings))
-                {
-                    return false;
-                }
-
-                languageStrings = DesDecrypt(languageStrings);
-
-                Translations = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(languageStrings);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                return false;
-            }
-        }
-
-        private static string DesDecrypt(string decryptString)
-        {
-            byte[] keyBytes = Encoding.UTF8.GetBytes("1076751236".Substring(0, 8));
-            byte[] keyIV = keyBytes;
-            byte[] inputByteArray = Convert.FromBase64String(decryptString);
-            DESCryptoServiceProvider provider = new DESCryptoServiceProvider();
-            MemoryStream mStream = new MemoryStream();
-            CryptoStream cStream = new CryptoStream(mStream, provider.CreateDecryptor(keyBytes, keyIV), CryptoStreamMode.Write);
-            cStream.Write(inputByteArray, 0, inputByteArray.Length);
-            cStream.FlushFinalBlock();
-            return Encoding.UTF8.GetString(mStream.ToArray());
-        }
     }
 }

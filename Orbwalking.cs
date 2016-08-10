@@ -1,37 +1,11 @@
-﻿#region LICENSE
-
-/*
- Copyright 2014 - 2015 LeagueSharp
- Orbwalking.cs is part of LeagueSharp.Common.
- 
- LeagueSharp.Common is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- LeagueSharp.Common is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with LeagueSharp.Common. If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#endregion
-
-#region
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using SharpDX;
-using Color = System.Drawing.Color;
-
-#endregion
-
-namespace LeagueSharp.Common
+﻿namespace LeagueSharp.Common
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using SharpDX;
+    using Color = System.Drawing.Color;
+
     /// <summary>
     ///     This class offers everything related to auto-attacks and orbwalking.
     /// </summary>
@@ -923,14 +897,14 @@ namespace LeagueSharp.Common
 
                 /* Missile check */
                 _config.AddItem(new MenuItem("MissileCheck", "Use Missile Check").SetShared().SetValue(true));
-                _config.AddItem(new MenuItem("Around", "走砍靈敏度提高").SetShared().SetValue(true)).ValueChanged += (obj, Args) => {
+                _config.AddItem(new MenuItem("Around", "提高走砍靈敏度").SetShared().SetValue(true)).ValueChanged += (obj, Args) => {
                     if (!Args.GetNewValue<bool>())
                         _config.Item("HoldPosRadius").SetShared().SetValue(new Slider(50, 50, 250));
                     else if (Args.GetNewValue<bool>())
                         _config.Item("HoldPosRadius").SetShared().SetValue(new Slider(0, 0, 250));
                 };
                 /* Delay sliders */
-                _config.AddItem(new MenuItem("autosetwinddd", "自動調整走砍延遲", true).SetValue(false));
+                _config.AddItem(new MenuItem("autosetwinddd", "自動調整延遲", true).SetValue(false));
                 new AutoSet(_config);
                 _config.AddItem(new MenuItem("ExtraWindup", "Extra windup time").SetShared().SetValue(new Slider(80, 0, 200)));
                 _config.AddItem(new MenuItem("FarmDelay", "Farm delay").SetShared().SetValue(new Slider(0, 0, 200)));
@@ -1136,6 +1110,7 @@ namespace LeagueSharp.Common
 
                 if (mode == OrbwalkingMode.LaneClear || mode == OrbwalkingMode.Mixed || mode == OrbwalkingMode.LastHit || mode == OrbwalkingMode.Freeze)
                 {
+
                     foreach (var minion in MinionManager.GetMinion(Player.Position, 0, MinionTeam.NotAlly).OrderBy(minion => HealthPrediction.GetHealthPrediction(minion, 1200)))
                     {
                         if (minion.Team != GameObjectTeam.Neutral)
@@ -1143,7 +1118,7 @@ namespace LeagueSharp.Common
                             if (!ShouldAttackMinion(minion))
                                 continue;
 
-                            var t = (int)(Player.AttackCastDelay * 1000) + BrainFarmInt + Game.Ping / 2 + 1000 * (int)Math.Max(0, Player.ServerPosition.Distance(minion.ServerPosition) - Player.BoundingRadius) / (int)GetMyProjectileSpeed();
+                            var t = (int)(Player.AttackCastDelay * 1000) + BrainFarmInt + Game.Ping / 2 + 1000 * (int)Math.Max(0, Player.Distance(minion) - Player.BoundingRadius) / (int)GetMyProjectileSpeed();
 
                             if (mode == OrbwalkingMode.Freeze)
                             {
@@ -1445,10 +1420,10 @@ namespace LeagueSharp.Common
                         return;
                     }
 
-                    if (Player.IsCastingInterruptableSpell(true))
-                    {
-                        return;
-                    }
+                    //if (Player.IsCastingInterruptableSpell(true))
+                    //{
+                    //    return;
+                    //}
 
                     MinionListAA = MinionManager.GetMinion(Player.Position, 0);
 
