@@ -648,7 +648,7 @@
                     result.WriteInteger(packetStruct.TargetNetworkId);
                     result.WriteByte((byte)packetStruct.Slot);
                     result.WriteByte(0);
-                        //packetStruct.SpellFlag == 0xFF ? GetSpellByte(packetStruct.Slot) : packetStruct.SpellFlag
+                    //packetStruct.SpellFlag == 0xFF ? GetSpellByte(packetStruct.Slot) : packetStruct.SpellFlag
                     return result;
                 }
 
@@ -3117,10 +3117,11 @@
                             var time = Utils.TickCount;
 
                             RecallDataByNetworkId[result.UnitNetworkId] = new TeleportData
-                                                                              {
-                                                                                  Duration = duration, Type = type,
-                                                                                  Start = time
-                                                                              };
+                            {
+                                Duration = duration,
+                                Type = type,
+                                Start = time
+                            };
 
                             result.Status = Status.Start;
                             result.Duration = duration;
@@ -5028,11 +5029,13 @@
                 {
                     var packet = new GamePacket(data);
                     var result = new Struct
-                                     {
-                                         NetworkId = packet.ReadInteger(6), YesVotes = packet.ReadByte(10),
-                                         NoVotes = packet.ReadByte(11), MaxVotes = packet.ReadByte(12),
-                                         Team = (GameObjectTeam)packet.ReadByte(13)
-                                     };
+                    {
+                        NetworkId = packet.ReadInteger(6),
+                        YesVotes = packet.ReadByte(10),
+                        NoVotes = packet.ReadByte(11),
+                        MaxVotes = packet.ReadByte(12),
+                        Team = (GameObjectTeam)packet.ReadByte(13)
+                    };
 
                     //byte unknown = packet.ReadByte(5); //Not sure what this is
 
@@ -5102,10 +5105,12 @@
                 {
                     var packet = new GamePacket(data);
                     var result = new Struct
-                                     {
-                                         TooEarly = Convert.ToBoolean(packet.ReadByte(5)), YesVotes = packet.ReadByte(9),
-                                         NoVotes = packet.ReadByte(10), Team = (GameObjectTeam)packet.ReadByte(11)
-                                     };
+                    {
+                        TooEarly = Convert.ToBoolean(packet.ReadByte(5)),
+                        YesVotes = packet.ReadByte(9),
+                        NoVotes = packet.ReadByte(10),
+                        Team = (GameObjectTeam)packet.ReadByte(11)
+                    };
 
                     return result;
                 }
