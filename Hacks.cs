@@ -8,15 +8,15 @@
     internal class Hacks
     {
         private static Obj_AI_Hero Player;
-        private static readonly Menu FlowersMenu = new Menu("Flowers Utility", "Flowers Utility");
+        private static readonly Menu FlowersMenu = new Menu("Utility", "Utility");
         private static int MoveTime;
-        //public static Vector3 LastEndPoint;
-        //public static float LastOrderTime, LastTime, DeltaTick = 0.15f;
-        //public static bool Attacking;
-        //public static Random random = new Random();
-        //public static bool FakerClickEnable => FlowersMenu.Item("Enable").GetValue<bool>();
-        //public static int FakerClickMode => FlowersMenu.Item("ClickMode").GetValue<StringList>().SelectedIndex;
-        //public static bool FakerClickKeyEnable => (FlowersMenu.Item("Key 1").GetValue<KeyBind>().Active || FlowersMenu.Item("Key 2").GetValue<KeyBind>().Active || FlowersMenu.Item("Key 3").GetValue<KeyBind>().Active || FlowersMenu.Item("Key 4").GetValue<KeyBind>().Active);
+        public static Vector3 LastEndPoint;
+        public static float LastOrderTime, LastTime, DeltaTick = 0.15f;
+        public static bool Attacking;
+        public static Random random = new Random();
+        public static bool FakerClickEnable => FlowersMenu.Item("Enable").GetValue<bool>();
+        public static int FakerClickMode => FlowersMenu.Item("ClickMode").GetValue<StringList>().SelectedIndex;
+        public static bool FakerClickKeyEnable => (FlowersMenu.Item("Key 1").GetValue<KeyBind>().Active || FlowersMenu.Item("Key 2").GetValue<KeyBind>().Active || FlowersMenu.Item("Key 3").GetValue<KeyBind>().Active || FlowersMenu.Item("Key 4").GetValue<KeyBind>().Active);
 
         internal static void Initialize()
         {
@@ -38,18 +38,17 @@
             {
                 Console.WriteLine("Error in Flowers_OnGameLoad " + ex);
             }
-
         }
 
         private static void LoadEvents()
         {
             try
             {
-                //Orbwalking.BeforeAttack += BeforeAttack;
-                //Orbwalking.AfterAttack += AfterAttack;
-                //Obj_AI_Base.OnIssueOrder += OnIssueOrder;
-                //Obj_AI_Base.OnNewPath += OnNewPath;
-                //Spellbook.OnCastSpell += OnCastSpell;
+                Orbwalking.BeforeAttack += BeforeAttack;
+                Orbwalking.AfterAttack += AfterAttack;
+                Obj_AI_Base.OnIssueOrder += OnIssueOrder;
+                Obj_AI_Base.OnNewPath += OnNewPath;
+                Spellbook.OnCastSpell += OnCastSpell;
                 Game.OnEnd += OnEnd;
                 Game.OnUpdate += OnUpdate;
             }
@@ -58,6 +57,117 @@
                 Console.WriteLine("Error in Flowers_LoadEvents " + ex);
             }
         }
+
+        private static void AfterAttack(AttackableUnit unit, AttackableUnit target)
+        {
+            Attacking = false;
+            var t = target as Obj_AI_Hero;
+            if (t != null && unit.IsMe)
+            {
+                ShowClick(RandomizePosition(t.Position), ClickType.Move);
+            }
+        }
+
+        private static void BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        {
+            if (FlowersMenu.Item("ClickMode").GetValue<StringList>().SelectedIndex == 1)
+            {
+                ShowClick(RandomizePosition(args.Target.Position), ClickType.Attack);
+                Attacking = true;
+            }
+        }
+
+
+        private static void OnCastSpell(Spellbook s, SpellbookCastSpellEventArgs args)
+        {
+            var target = args.Target;
+
+            if (target == null)
+            {
+                return;
+            }
+
+            if (target.Position.Distance(Player.Position) >= 5f)
+            {
+                ShowClick(args.Target.Position, ClickType.Attack);
+            }
+        }
+
+        private static void OnNewPath(Obj_AI_Base sender, GameObjectNewPathEventArgs args)
+        {
+            if (sender.IsMe && LastTime + DeltaTick < Game.Time && args.Path.LastOrDefault() != LastEndPoint
+                && args.Path.LastOrDefault().Distance(Player.ServerPosition) >= 5f && FlowersMenu.Item("Enable").IsActive()
+                && FlowersMenu.Item("ClickMode").GetValue<StringList>().SelectedIndex == 1)
+            {
+                LastEndPoint = args.Path.LastOrDefault();
+                if (!Attacking)
+                {
+                    ShowClick(Game.CursorPos, ClickType.Move);
+                }
+                else
+                {
+                    ShowClick(Game.CursorPos, ClickType.Attack);
+                }
+
+                LastTime = Game.Time;
+            }
+        }
+
+        private static void OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
+        {
+            if (sender.IsMe
+                && (args.Order == GameObjectOrder.MoveTo || args.Order == GameObjectOrder.AttackUnit
+                    || args.Order == GameObjectOrder.AttackTo)
+                && LastOrderTime + random.NextFloat(DeltaTick, DeltaTick + .2f) < Game.Time && FlowersMenu.Item("Enable").IsActive()
+                && FlowersMenu.Item("ClickMode").GetValue<StringList>().SelectedIndex == 0)
+            {
+                var vect = args.TargetPosition;
+                vect.Z = Player.Position.Z;
+                if (args.Order == GameObjectOrder.AttackUnit || args.Order == GameObjectOrder.AttackTo)
+                {
+                    ShowClick(RandomizePosition(vect), ClickType.Attack);
+                }
+                else
+                {
+                    ShowClick(vect, ClickType.Move);
+                }
+
+                LastOrderTime = Game.Time;
+            }
+        }
+
+        private static Vector3 RandomizePosition(Vector3 input)
+        {
+            if (random.Next(2) == 0)
+            {
+                input.X += random.Next(100);
+            }
+            else
+            {
+                input.Y += random.Next(100);
+            }
+
+            return input;
+        }
+
+        private static void ShowClick(Vector3 position, ClickType type)
+        {
+            if (!Enabled)
+            {
+                return;
+            }
+
+            Hud.ShowClick(type, position);
+        }
+
+        public static bool Enabled
+        {
+            get
+            {
+                return FlowersMenu.Item("Enable").IsActive();
+            }
+        }
+
 
         private static void OnEnd(GameEndEventArgs args)
         {
@@ -216,13 +326,13 @@
         {
             try
             {
-                //FlowersMenu.AddItem(new MenuItem("fakeclicks", "--------- FakeClicks"));
-                //FlowersMenu.AddItem(new MenuItem("Enable", "Enable").SetValue(false));
-                //FlowersMenu.AddItem(new MenuItem("ClickMode", "Click Mode")).SetValue(new StringList(new[] { "Evade, No Cursor Position", "Cursor Position, No Evade", "Press Key" }));
-                //FlowersMenu.AddItem(new MenuItem("Key 1", "PressKey 1").SetValue(new KeyBind('X', KeyBindType.Press)));
-                //FlowersMenu.AddItem(new MenuItem("Key 2", "PressKey 2").SetValue(new KeyBind('C', KeyBindType.Press)));
-                //FlowersMenu.AddItem(new MenuItem("Key 3", "PressKey 3").SetValue(new KeyBind('V', KeyBindType.Press)));
-                //FlowersMenu.AddItem(new MenuItem("Key 4", "PressKey 4").SetValue(new KeyBind(32, KeyBindType.Press)));
+                FlowersMenu.AddItem(new MenuItem("fakeclicks", "--------- FakeClicks"));
+                FlowersMenu.AddItem(new MenuItem("Enable", "Enable").SetValue(false));
+                FlowersMenu.AddItem(new MenuItem("ClickMode", "Click Mode")).SetValue(new StringList(new[] { "Evade, No Cursor Position", "Cursor Position, No Evade", "Press Key" }));
+                FlowersMenu.AddItem(new MenuItem("Key 1", "PressKey 1").SetValue(new KeyBind('X', KeyBindType.Press)));
+                FlowersMenu.AddItem(new MenuItem("Key 2", "PressKey 2").SetValue(new KeyBind('C', KeyBindType.Press)));
+                FlowersMenu.AddItem(new MenuItem("Key 3", "PressKey 3").SetValue(new KeyBind('V', KeyBindType.Press)));
+                FlowersMenu.AddItem(new MenuItem("Key 4", "PressKey 4").SetValue(new KeyBind(32, KeyBindType.Press)));
 
                 FlowersMenu.AddItem(new MenuItem("Explore Utility", "--------- 開發功能"));
                 FlowersMenu.AddItem(new MenuItem("DisableDrawings", "Screen display [I]", true).SetValue(new KeyBind('I', KeyBindType.Toggle)));
@@ -230,10 +340,10 @@
                 FlowersMenu.AddItem(new MenuItem("DisableSay", "Ban said the script", true).SetValue(true));
                 FlowersMenu.AddItem(new MenuItem("TowerRanges", "Show enemy tower range", true).SetValue(false));
                 FlowersMenu.AddItem(new MenuItem("SaySomething", "Stop script loading information").SetValue(true));
-                FlowersMenu.AddItem(new MenuItem("AutoQuick", "遊戲快結束退出到結算界面").SetValue(false));
-                FlowersMenu.AddItem(new MenuItem("AutoWalk", "溫泉自動移動到最佳位置").SetValue(false));
-                FlowersMenu.AddItem(new MenuItem("AutoWalkLane", "玩家路線").SetValue(new StringList(new[] { "上", "中", "下" }, 2)));
-                FlowersMenu.AddItem(new MenuItem("SaySomething1", "By huabian By翻譯 CjShu"));
+                FlowersMenu.AddItem(new MenuItem("AutoQuick", "遊戲结束快速退出到结算界面").SetValue(false));
+                FlowersMenu.AddItem(new MenuItem("AutoWalk", "泉水自動移動到最佳位置").SetValue(false));
+                FlowersMenu.AddItem(new MenuItem("AutoWalkLane", "玩家路线").SetValue(new StringList(new[] { "上", "中", "下" }, 2)));
+                FlowersMenu.AddItem(new MenuItem("SaySomething1", "By花 or CjShu"));
                 CommonMenu.Instance.AddSubMenu(FlowersMenu);
             }
             catch (Exception ex)
