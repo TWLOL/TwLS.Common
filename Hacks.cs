@@ -3,359 +3,165 @@
     using System;
     using System.Linq;
     using SharpDX;
-    using NightMoon = LeagueSharp.Hacks;
 
     internal class Hacks
     {
-        private static Obj_AI_Hero Player;
-        private static readonly Menu FlowersMenu = new Menu("Utility", "Utility");
-        private static int MoveTime;
-        public static Vector3 LastEndPoint;
-        public static float LastOrderTime, LastTime, DeltaTick = 0.15f;
-        public static bool Attacking;
-        public static Random random = new Random();
-        public static bool FakerClickEnable => FlowersMenu.Item("Enable").GetValue<bool>();
-        public static int FakerClickMode => FlowersMenu.Item("ClickMode").GetValue<StringList>().SelectedIndex;
-        public static bool FakerClickKeyEnable => (FlowersMenu.Item("Key 1").GetValue<KeyBind>().Active || FlowersMenu.Item("Key 2").GetValue<KeyBind>().Active || FlowersMenu.Item("Key 3").GetValue<KeyBind>().Active || FlowersMenu.Item("Key 4").GetValue<KeyBind>().Active);
+        #region Constants
 
-        internal static void Initialize()
-        {
-            CustomEvents.Game.OnGameLoad += OnGameLoad;
-        }
+        private const int WM_KEYDOWN = 0x100;
 
-        private static void OnGameLoad(EventArgs args)
-        {
+        private const int WM_KEYUP = 0x101;
 
-            try
-            {
-                Player = ObjectManager.Player;
+        #endregion
 
-                LoadInitializeMenu();
-                LoadUtility();
-                LoadEvents();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error in Flowers_OnGameLoad " + ex);
-            }
-        }
+        #region Static Fields
 
-        private static void LoadEvents()
-        {
-            try
-            {
-                Orbwalking.BeforeAttack += BeforeAttack;
-                Orbwalking.AfterAttack += AfterAttack;
-                Obj_AI_Base.OnIssueOrder += OnIssueOrder;
-                Obj_AI_Base.OnNewPath += OnNewPath;
-                Spellbook.OnCastSpell += OnCastSpell;
-                Game.OnEnd += OnEnd;
-                Game.OnUpdate += OnUpdate;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error in Flowers_LoadEvents " + ex);
-            }
-        }
+        private static Menu menu;
 
-        private static void AfterAttack(AttackableUnit unit, AttackableUnit target)
-        {
-            Attacking = false;
-            var t = target as Obj_AI_Hero;
-            if (t != null && unit.IsMe)
-            {
-                ShowClick(RandomizePosition(t.Position), ClickType.Move);
-            }
-        }
+        private static MenuItem MenuAntiAfk;
 
-        private static void BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
-        {
-            if (FlowersMenu.Item("ClickMode").GetValue<StringList>().SelectedIndex == 1)
-            {
-                ShowClick(RandomizePosition(args.Target.Position), ClickType.Attack);
-                Attacking = true;
-            }
-        }
+        private static MenuItem MenuDisableDrawings;
 
+        private static MenuItem MenuDisableSay;
 
-        private static void OnCastSpell(Spellbook s, SpellbookCastSpellEventArgs args)
-        {
-            var target = args.Target;
+        private static MenuItem MenuTowerRange;
 
-            if (target == null)
-            {
-                return;
-            }
-
-            if (target.Position.Distance(Player.Position) >= 5f)
-            {
-                ShowClick(args.Target.Position, ClickType.Attack);
-            }
-        }
-
-        private static void OnNewPath(Obj_AI_Base sender, GameObjectNewPathEventArgs args)
-        {
-            if (sender.IsMe && LastTime + DeltaTick < Game.Time && args.Path.LastOrDefault() != LastEndPoint
-                && args.Path.LastOrDefault().Distance(Player.ServerPosition) >= 5f && FlowersMenu.Item("Enable").IsActive()
-                && FlowersMenu.Item("ClickMode").GetValue<StringList>().SelectedIndex == 1)
-            {
-                LastEndPoint = args.Path.LastOrDefault();
-                if (!Attacking)
-                {
-                    ShowClick(Game.CursorPos, ClickType.Move);
-                }
-                else
-                {
-                    ShowClick(Game.CursorPos, ClickType.Attack);
-                }
-
-                LastTime = Game.Time;
-            }
-        }
-
-        private static void OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
-        {
-            if (sender.IsMe
-                && (args.Order == GameObjectOrder.MoveTo || args.Order == GameObjectOrder.AttackUnit
-                    || args.Order == GameObjectOrder.AttackTo)
-                && LastOrderTime + random.NextFloat(DeltaTick, DeltaTick + .2f) < Game.Time && FlowersMenu.Item("Enable").IsActive()
-                && FlowersMenu.Item("ClickMode").GetValue<StringList>().SelectedIndex == 0)
-            {
-                var vect = args.TargetPosition;
-                vect.Z = Player.Position.Z;
-                if (args.Order == GameObjectOrder.AttackUnit || args.Order == GameObjectOrder.AttackTo)
-                {
-                    ShowClick(RandomizePosition(vect), ClickType.Attack);
-                }
-                else
-                {
-                    ShowClick(vect, ClickType.Move);
-                }
-
-                LastOrderTime = Game.Time;
-            }
-        }
-
-        private static Vector3 RandomizePosition(Vector3 input)
-        {
-            if (random.Next(2) == 0)
-            {
-                input.X += random.Next(100);
-            }
-            else
-            {
-                input.Y += random.Next(100);
-            }
-
-            return input;
-        }
-
-        private static void ShowClick(Vector3 position, ClickType type)
-        {
-            if (!Enabled)
-            {
-                return;
-            }
-
-            Hud.ShowClick(type, position);
-        }
-
-        public static bool Enabled
+        public static bool AntiAFK
         {
             get
             {
-                return FlowersMenu.Item("Enable").IsActive();
+                return LeagueSharp.Hacks.AntiAFK;
             }
-        }
-
-
-        private static void OnEnd(GameEndEventArgs args)
-        {
-            try
+            set
             {
-                if (FlowersMenu.Item("AutoQuick").GetValue<bool>())
+                if (value == LeagueSharp.Hacks.AntiAFK)
                 {
-                    System.Threading.Tasks.Task.Run(async () =>
-                    {
-                        await System.Threading.Tasks.Task.Delay(5000);
-                        Game.Quit();
-                    });
+                    return;
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error in Flowers_OnEnd " + ex);
+
+                LeagueSharp.Hacks.AntiAFK = value;
             }
         }
 
-        private static void OnUpdate(EventArgs Args)
+        public static bool DisableDrawings
         {
-            try
+            get
             {
-                NightMoon.DisableDrawings = FlowersMenu.Item("DisableDrawings", true).GetValue<KeyBind>().Active;
-                NightMoon.DisableSay = FlowersMenu.Item("DisableSay", true).GetValue<bool>();
-                NightMoon.TowerRanges = FlowersMenu.Item("TowerRanges", true).GetValue<bool>();
-                NightMoon.ZoomHack = FlowersMenu.Item("ZoomHack", true).GetValue<bool>();
-
-                if (Player.InFountain() && Utils.GameTimeTickCount - MoveTime >= 20000)
+                return LeagueSharp.Hacks.DisableDrawings;
+            }
+            set
+            {
+                if (value == LeagueSharp.Hacks.DisableDrawings)
                 {
-                    if (FlowersMenu.Item("AutoWalk").GetValue<bool>())
-                    {
-                        var MoveLane = FlowersMenu.Item("AutoWalkLane").GetValue<StringList>().SelectedIndex;
-
-                        if (Game.MapId == GameMapId.SummonersRift)
-                        {
-                            if (Player.Team == GameObjectTeam.Order)
-                            {
-                                switch (MoveLane)
-                                {
-                                    case 0:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(526.00f, 1352.00f, 103.02f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                    case 1:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(834.00f, 1300.00f, 105.60f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                    case 2:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(1370.00f, 538.00f, 99.85f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                }
-                            }
-                            else if (Player.Team == GameObjectTeam.Chaos)
-                            {
-                                switch (MoveLane)
-                                {
-                                    case 0:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(13886.00f, 13602.00f, 119.23f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                    case 1:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(13408.00f, 14294.00f, 126.02f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                    case 2:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(14172.00f, 13384.00f, 91.65f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                }
-                            }
-                        }
-                        else if (Game.MapId == GameMapId.TwistedTreeline)
-                        {
-                            if (Player.Team == GameObjectTeam.Order)
-                            {
-                                switch (MoveLane)
-                                {
-                                    case 0:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(2120.00f, 8943.00f, 17.44f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                    case 2:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(1018.00f, 6801.00f, 159.32f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                }
-                            }
-                            else if (Player.Team == GameObjectTeam.Chaos)
-                            {
-                                switch (MoveLane)
-                                {
-                                    case 0:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(13766.00f, 9147.00f, 14.05f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                    case 2:
-                                        Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(14468.00f, 6823.00f, 158.93f));
-                                        MoveTime = Utils.GameTimeTickCount;
-                                        break;
-                                }
-                            }
-                        }
-                        else if (Game.MapId == GameMapId.HowlingAbyss)
-                        {
-                            if (Player.Team == GameObjectTeam.Order)
-                            {
-                                Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(1613.00f, 2423.00f, -177.89f));
-                                MoveTime = Utils.GameTimeTickCount;
-                                return;
-                            }
-                            else if (Player.Team == GameObjectTeam.Chaos)
-                            {
-                                Player.IssueOrder(GameObjectOrder.MoveTo, new Vector3(10715.00f, 11129.00f, -177.89f));
-                                MoveTime = Utils.GameTimeTickCount;
-                                return;
-                            }
-                        }
-                    }
+                    return;
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error in Flowers_OnUpdate " + ex);
+
+                LeagueSharp.Hacks.DisableDrawings = value;
             }
         }
 
-        private static void LoadUtility()
+        public static bool DisableSay
         {
-            try
+            get
             {
-                if (FlowersMenu.Item("SaySomething").GetValue<bool>())
+                return LeagueSharp.Hacks.DisableSay;
+            }
+            set
+            {
+                if (value == LeagueSharp.Hacks.DisableSay)
                 {
-                    Utility.DelayAction.Add(1000, () => {
-                        Game.PrintChat("銆€");
-                        Game.PrintChat("銆€");
-                        Game.PrintChat("銆€");
-                        Game.PrintChat("銆€");
-                        Game.PrintChat("銆€");
-                        Game.PrintChat("銆€");
-                        Game.PrintChat("銆€");
-                        Game.PrintChat("銆€");
-                        Game.PrintChat("<font color=\"#FFA042\"><b>杈撳嚭/help鑾峰彇鍛戒护鍒楄〃</b></font>");
-                    });
+                    return;
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error in Flowers_LoadUtility " + ex);
+
+                LeagueSharp.Hacks.DisableSay = value;
             }
         }
 
-        private static void LoadInitializeMenu()
+        public static bool TowerRanges
         {
-            try
+            get
             {
-                FlowersMenu.AddItem(new MenuItem("fakeclicks", "--------- FakeClicks"));
-                FlowersMenu.AddItem(new MenuItem("Enable", "Enable").SetValue(false));
-                FlowersMenu.AddItem(new MenuItem("ClickMode", "Click Mode")).SetValue(new StringList(new[] { "Evade, No Cursor Position", "Cursor Position, No Evade", "Press Key" }));
-                FlowersMenu.AddItem(new MenuItem("Key 1", "PressKey 1").SetValue(new KeyBind('X', KeyBindType.Press)));
-                FlowersMenu.AddItem(new MenuItem("Key 2", "PressKey 2").SetValue(new KeyBind('C', KeyBindType.Press)));
-                FlowersMenu.AddItem(new MenuItem("Key 3", "PressKey 3").SetValue(new KeyBind('V', KeyBindType.Press)));
-                FlowersMenu.AddItem(new MenuItem("Key 4", "PressKey 4").SetValue(new KeyBind(32, KeyBindType.Press)));
-
-                FlowersMenu.AddItem(new MenuItem("Explore Utility", "--------- 開發功能"));
-                FlowersMenu.AddItem(new MenuItem("DisableDrawings", "Screen display [I]", true).SetValue(new KeyBind('I', KeyBindType.Toggle)));
-                FlowersMenu.AddItem(new MenuItem("ZoomHack", "Infinite horizon [danger]", true).SetValue(false));
-                FlowersMenu.AddItem(new MenuItem("DisableSay", "Ban said the script", true).SetValue(true));
-                FlowersMenu.AddItem(new MenuItem("TowerRanges", "Show enemy tower range", true).SetValue(false));
-                FlowersMenu.AddItem(new MenuItem("SaySomething", "Stop script loading information").SetValue(true));
-                FlowersMenu.AddItem(new MenuItem("AutoQuick", "遊戲结束快速退出到结算界面").SetValue(false));
-                FlowersMenu.AddItem(new MenuItem("AutoWalk", "泉水自動移動到最佳位置").SetValue(false));
-                FlowersMenu.AddItem(new MenuItem("AutoWalkLane", "玩家路线").SetValue(new StringList(new[] { "上", "中", "下" }, 2)));
-                FlowersMenu.AddItem(new MenuItem("SaySomething1", "By花 or CjShu"));
-                CommonMenu.Instance.AddSubMenu(FlowersMenu);
+                return LeagueSharp.Hacks.TowerRanges;
             }
-            catch (Exception ex)
+            set
             {
-                Console.WriteLine("Error in Flowers_Menu " + ex);
+                if (value == LeagueSharp.Hacks.TowerRanges)
+                {
+                    return;
+                }
+
+                LeagueSharp.Hacks.TowerRanges = value;
             }
         }
+
+        #endregion
+
+        #region Public Methods and Operators
 
         public static void Shutdown()
         {
-            Menu.Remove(FlowersMenu);
+            Menu.Remove(menu);
         }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        ///     Initializes this instance.
+        /// </summary>
+        internal static void Initialize()
+        {
+            CustomEvents.Game.OnGameLoad += eventArgs =>
+            {
+                menu = new Menu("Hacks", "Hacks");
+
+                MenuAntiAfk = menu.AddItem(new MenuItem("AfkHack", "Anti-AFK").SetValue(false));
+                MenuAntiAfk.ValueChanged += (sender, args) => AntiAFK = args.GetNewValue<bool>();
+
+                MenuDisableDrawings = menu.AddItem(new MenuItem("DrawingHack", "Disable Drawing").SetValue(false));
+                MenuDisableDrawings.ValueChanged += (sender, args) => DisableDrawings = args.GetNewValue<bool>();
+                MenuDisableDrawings.SetValue(DisableDrawings);
+
+                MenuDisableSay = menu.AddItem(new MenuItem("SayHack", "Disable L# Send Chat").SetValue(false).SetTooltip("Block Game.Say from Assemblies"));
+                MenuDisableSay.ValueChanged += (sender, args) => DisableSay = args.GetNewValue<bool>();
+
+                MenuTowerRange = menu.AddItem(new MenuItem("TowerHack", "Show Tower Ranges").SetValue(false));
+                MenuTowerRange.ValueChanged += (sender, args) => TowerRanges = args.GetNewValue<bool>();
+
+                AntiAFK = MenuAntiAfk.GetValue<bool>();
+                DisableDrawings = MenuDisableDrawings.GetValue<bool>();
+                DisableSay = MenuDisableSay.GetValue<bool>();
+                TowerRanges = MenuTowerRange.GetValue<bool>();
+
+                CommonMenu.Instance.AddSubMenu(menu);
+
+                Game.OnWndProc += args =>
+                {
+                    if (!MenuDisableDrawings.GetValue<bool>())
+                    {
+                        return;
+                    }
+
+                    if ((int)args.WParam != Config.ShowMenuPressKey)
+                    {
+                        return;
+                    }
+
+                    if (args.Msg == WM_KEYDOWN)
+                    {
+                        LeagueSharp.Hacks.DisableDrawings = false;
+                    }
+
+                    if (args.Msg == WM_KEYUP)
+                    {
+                        LeagueSharp.Hacks.DisableDrawings = true;
+                    }
+                };
+            };
+        }
+
+        #endregion
     }
 
     internal class AutoSet
