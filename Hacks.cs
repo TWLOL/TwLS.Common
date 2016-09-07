@@ -1,6 +1,8 @@
 ﻿namespace LeagueSharp.Common
 {
     using System;
+    using System.Linq;
+    using SharpDX;
 
     internal class Hacks
     {
